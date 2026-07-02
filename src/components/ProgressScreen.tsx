@@ -25,6 +25,8 @@ interface ProgressScreenProps {
   logEvent: (type: "info" | "success" | "warning", message: string) => void;
   setNotifications: React.Dispatch<React.SetStateAction<any[]>>;
   onNavigateToTab?: (tab: string) => void;
+  childName?: string;
+  parentName?: string;
 }
 
 const COMPLETED_ADVENTURES = [
@@ -201,11 +203,28 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
   lang,
   logEvent,
   setNotifications,
-  onNavigateToTab
+  onNavigateToTab,
+  childName,
+  parentName
 }) => {
   const [activeTab, setActiveTab] = useState<"parent" | "child">("parent");
   const [selectedInsight, setSelectedInsight] = useState<string | null>(null);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+
+  const child = childName || "Aarav";
+  const parent = parentName || "Sarah";
+
+  const sanitizeText = (txt: string) => {
+    if (!txt) return "";
+    let s = txt;
+    s = s.replace(/Liam Henderson/g, child);
+    s = s.replace(/Liam/g, child);
+    s = s.replace(/Sarah Hendrickx/g, "AutisticPath Author");
+    s = s.replace(/Dr\. Miller/g, "Connected Therapist");
+    s = s.replace(/Dra\. Miller/g, "Terapeuta Asociada");
+    s = s.replace(/Sarah/g, parent);
+    return s;
+  };
 
   const strings = {
     titleEn: "Growth & Connection Journal",
@@ -358,10 +377,10 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
                   {lang === "sp" ? "Sincronización Natural" : "Natural Synchronization Achieved"}
                 </span>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                  {lang === "sp"
+                  {sanitizeText(lang === "sp"
                     ? "Liam completó con mucho éxito el juego del Eco dos veces seguidas, manteniendo una voz muy calmada y suave junto a mamá."
                     : "Liam experienced deep calm state integration across multiple days this week. Rhythms are beautifully stable."
-                  }
+                  )}
                 </p>
               </div>
             </div>
@@ -394,10 +413,10 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
                   {lang === "sp" ? "3 Días Seguidos" : "3 Days Strong"}
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-                  {lang === "sp"
+                  {sanitizeText(lang === "sp"
                     ? "¡Has jugado tres días seguidos sin parar! La constancia ayuda a Liam a sentirse seguro."
                     : "Launching play sessions consecutively creates an elegant biological habit of emotional safety."
-                  }
+                  )}
                 </p>
               </div>
             </div>
@@ -521,12 +540,12 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
                   </div>
 
                   <p className={`text-sm mt-3 leading-relaxed font-medium ${textPrimaryClass}`}>
-                    "{lang === "sp" ? insight.textSp : lang === "es" ? insight.textEs : insight.textEn}"
+                    "{sanitizeText(lang === "sp" ? insight.textSp : lang === "es" ? insight.textEs : insight.textEn)}"
                   </p>
 
                   <div className="mt-4 flex items-center justify-between text-xs text-gray-400 border-t border-black/5 dark:border-white/5 pt-3">
                     <span className="italic font-medium">
-                      {lang === "es" ? insight.clinicianEs : insight.clinicianEn}
+                      {sanitizeText(lang === "es" ? insight.clinicianEs : insight.clinicianEn)}
                     </span>
                     <span className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-bold">
                       {isSelected ? (lang === 'sp' ? 'Cerrar' : 'Minimize') : (lang === 'sp' ? 'Ver Detalles' : 'Read Guidance Plan')}
@@ -546,9 +565,9 @@ export const ProgressScreen: React.FC<ProgressScreenProps> = ({
                         <div className="pt-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed bg-black/5 dark:bg-white/5 rounded p-4 mt-4 space-y-2">
                           <h5 className="font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest">CO-REGULATION PLAYBOOK ACTION:</h5>
                           <p className="font-medium">
-                            {lang === "sp"
+                            {sanitizeText(lang === "sp"
                               ? "Introduce esta actividad de 10 a 15 minutos en un espacio suave. Sostén a Liam con contacto firme para brindarle soporte táctil y reducir estímulos auditivos bruscos."
-                              : "Integrate this target for 12 minutes during the transition out of active play. Dim visual devices 10 minutes prior to starting."}
+                              : "Integrate this target for 12 minutes during the transition out of active play. Dim visual devices 10 minutes prior to starting.")}
                           </p>
                         </div>
                       </motion.div>

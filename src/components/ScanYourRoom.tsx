@@ -141,37 +141,85 @@ export const ScanYourRoom: React.FC<ScanYourRoomProps> = ({
 
   // Localization
   const strings = {
-    title: { en: "Spatial Room Scanner", es: "Escáner de Sala Espacial", sp: "Buscador de Cosas Mágicas" },
-    subtitle: {
-      en: "Scan your current room to detect therapeutic objects and generate dynamic visual adventures.",
-      es: "Escanea la habitación actual para detectar objetos terapéuticos y crear aventuras dinámicas.",
-      sp: "¡Escanea tu cuarto para encontrar juguetes y crear aventuras de superhéroe!"
+    title: {
+      en: "Create Session From My Room",
+      es: "Crear Sesión Desde Mi Habitación",
+      sp: "Crear Sesión Desde Mi Habitación"
     },
-    startScan: { en: "Initialize Spatial Scan", es: "Iniciar Escaneo Espacial", sp: "¡Buscar Objetos con la Cámara!" },
-    scanning: { en: "Analyzing Environmental Geometry...", es: "Analizando Geometría del Entorno...", sp: "¡La Cámara Mágica está buscando!..." },
-    calibrating: { en: "Mapping therapeutic affordances...", es: "Mapeando posibilidades terapéuticas...", sp: "Encontrando secretos divertidos..." },
-    confidenceBadge: { en: "Confidence", es: "Precisión", sp: "Poder" },
-    confirm: { en: "Confirm", es: "Confirmar", sp: "¡Usar!" },
-    remove: { en: "Ignore", es: "Descartar", sp: "No usar" },
-    confirmedTitle: { en: "Confirmed Objects", es: "Objetos Confirmados", sp: "Tus Juguetes Seleccionados" },
-    createMissionBtn: { en: "Generate Spatial Adventure", es: "Generar Aventura Espacial", sp: "¡Crear Mi Aventura!" },
-    missionCreatedHeader: { en: "Today's Adventure has been created", es: "La Aventura de Hoy ha sido creada", sp: "¡Tu Aventura Mágica ya está Lista!" },
+    subtitle: {
+      en: "Point your camera around your room. We'll use everyday objects to create a personalized therapy session.",
+      es: "Apunta tu cámara alrededor de tu habitación. Usaremos objetos cotidianos para crear una sesión de terapia personalizada.",
+      sp: "¡Busca cosas lindas en tu habitación con la cámara para crear juegos divertidos!"
+    },
+    startScan: {
+      en: "Create Session From My Room",
+      es: "Crear Sesión Desde Mi Habitación",
+      sp: "¡Empezar Juego!"
+    },
+    scanning: {
+      en: "Finding everyday objects...",
+      es: "Buscando objetos cotidianos...",
+      sp: "Buscando cosas lindas..."
+    },
+    calibrating: {
+      en: "Preparing your warm session...",
+      es: "Preparando tu sesión acogedora...",
+      sp: "Preparando tu juego..."
+    },
+    confidenceBadge: {
+      en: "Match",
+      es: "Coincidencia",
+      sp: "Coincidencia"
+    },
+    confirm: {
+      en: "Use This",
+      es: "Usar",
+      sp: "Usar"
+    },
+    remove: {
+      en: "Skip",
+      es: "Omitir",
+      sp: "Omitir"
+    },
+    confirmedTitle: {
+      en: "Selected Objects",
+      es: "Objetos Seleccionados",
+      sp: "Cosas de la Habitación"
+    },
+    createMissionBtn: {
+      en: "Create Session",
+      es: "Crear Sesión",
+      sp: "¡Crear Mi Sesión!"
+    },
+    missionCreatedHeader: {
+      en: "Your Session is Ready!",
+      es: "¡Tu Sesión está Lista!",
+      sp: "¡Tu Sesión Mágica ya está Lista!"
+    },
     missionCreatedSub: {
-      en: "Synthesized visionOS therapeutic flow utilizing verified household parameters.",
-      es: "Flujo terapéutico sintetizado utilizando los parámetros verificados del hogar.",
+      en: "We have prepared daily games using the everyday items found in your room.",
+      es: "Hemos preparado juegos diarios utilizando los artículos cotidianos de tu habitación.",
       sp: "¡Hemos preparado juegos increíbles usando las cosas de tu cuarto!"
     },
-    resetScan: { en: "Scan New Room", es: "Escaneo Nuevo", sp: "Escanear Otra Vez" },
-    emptyState: {
-      en: "Position your device and activate the Spatial Scan. The system will detect available sensory targets.",
-      es: "Coloca tu dispositivo y activa el Escaneo Espacial. El sistema detectará objetivos sensoriales disponibles.",
-      sp: "¡Pon tu cámara frente a tu cuarto y presiona el botón para iniciar la magia!"
+    resetScan: {
+      en: "Scan Again",
+      es: "Volver a Escanear",
+      sp: "Escanear Otra Vez"
     },
-    activityTitle: { en: "Spatial Activity Playbook", es: "Manual de Actividades Espaciales", sp: "Tus Juegos de Superpoderes" },
+    emptyState: {
+      en: "Press the button below and slowly scan your room to detect safe items like pillows, books, or blankets.",
+      es: "Presiona el botón de abajo y escanea lentamente tu habitación para detectar artículos seguros como almohadas, libros o mantas.",
+      sp: "¡Presiona el botón de abajo para empezar a buscar cosas en tu habitación!"
+    },
+    activityTitle: {
+      en: "Playful Interaction Ideas",
+      es: "Ideas de Juego",
+      sp: "Juegos para Divertirse"
+    },
     activityDesc: {
-      en: "Scientifically structured home exercises targeting developmental integration.",
-      es: "Ejercicios domésticos estructurados científicamente para el desarrollo integral.",
-      sp: "Juegos súper divertidos creados especialmente para ti hoy."
+      en: "Warm, gentle ways to practice communication and play together using your selected items.",
+      es: "Formas cálidas y amables de practicar la comunicación y jugar juntos utilizando los objetos seleccionados.",
+      sp: "Juegos lindos y sencillos diseñados especialmente para divertirse hoy."
     }
   };
 
@@ -182,7 +230,7 @@ export const ScanYourRoom: React.FC<ScanYourRoomProps> = ({
     setScannedObjects([]);
     setHasScanned(false);
     setIsMissionCreated(false);
-    logEvent("info", "Initiating spatial room boundary mapping...");
+    logEvent("info", "Starting room camera search...");
 
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
 
@@ -194,28 +242,28 @@ export const ScanYourRoom: React.FC<ScanYourRoomProps> = ({
         if (next === 20) {
           const obj = INITIAL_DETECTED_OBJECTS[0];
           setScannedObjects((current) => [...current, obj]);
-          logEvent("success", `Detected household object: ${obj.nameEn} (Confidence: ${obj.confidence}%)`);
+          logEvent("success", `Found: ${obj.nameEn}!`);
         } else if (next === 40) {
           const obj = INITIAL_DETECTED_OBJECTS[1];
           const obj2 = INITIAL_DETECTED_OBJECTS[2];
           setScannedObjects((current) => [...current, obj, obj2]);
-          logEvent("success", `Detected household objects: ${obj.nameEn} & ${obj2.nameEn}`);
+          logEvent("success", `Found: ${obj.nameEn} & ${obj2.nameEn}!`);
         } else if (next === 65) {
           const obj = INITIAL_DETECTED_OBJECTS[3];
           setScannedObjects((current) => [...current, obj]);
-          logEvent("success", `Detected household object: ${obj.nameEn}`);
+          logEvent("success", `Found: ${obj.nameEn}!`);
         } else if (next === 85) {
           const obj1 = INITIAL_DETECTED_OBJECTS[4];
           const obj2 = INITIAL_DETECTED_OBJECTS[5];
           setScannedObjects((current) => [...current, obj1, obj2]);
-          logEvent("success", `Detected household objects: ${obj1.nameEn} & ${obj2.nameEn}`);
+          logEvent("success", `Found: ${obj1.nameEn} & ${obj2.nameEn}!`);
         }
 
         if (next >= 100) {
           clearInterval(scanTimerRef.current);
           setIsScanning(false);
           setHasScanned(true);
-          logEvent("success", "Spatial point cloud geometry calibration complete.");
+          logEvent("success", "Room search complete.");
           return 100;
         }
         return next;

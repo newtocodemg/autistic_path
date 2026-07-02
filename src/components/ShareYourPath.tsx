@@ -628,7 +628,7 @@ export function ShareYourPath({
                     The Whispering Woods Journey
                   </h3>
                   <p className="text-xs text-gray-400 leading-relaxed font-semibold">
-                    Co-regulate sensory auditives and practice 4-7-8 breathing shoreline pacing. Sourced from Seattle Children's Clinic.
+                    Co-regulate sensory auditives and practice 4-7-8 breathing shoreline pacing. Sourced from Connected Clinic.
                   </p>
                 </div>
 
@@ -1108,7 +1108,7 @@ export function ShareYourPath({
                           type="text"
                           value={nickname}
                           onChange={(e) => setNickname(e.target.value)}
-                          placeholder="e.g. Leo, Liam"
+                          placeholder="e.g. Leo"
                           className={`w-full p-3 rounded-premium border text-xs font-medium bg-transparent focus:outline-none focus:border-blue-500 ${borderClass} ${textPrimary}`}
                         />
                       </div>

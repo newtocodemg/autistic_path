@@ -26,6 +26,7 @@ interface ParentWhisperModeProps {
   lang: "en" | "es" | "sp" | "hi";
   logEvent: (type: "info" | "success" | "warning", message: string) => void;
   setNotifications: React.Dispatch<React.SetStateAction<any[]>>;
+  childName?: string;
 }
 
 interface InstructionStep {
@@ -146,7 +147,8 @@ export const ParentWhisperMode: React.FC<ParentWhisperModeProps> = ({
   theme,
   lang,
   logEvent,
-  setNotifications
+  setNotifications,
+  childName = "your child"
 }) => {
   const [activeCategory, setActiveCategory] = useState<"calming" | "transition" | "attention">("calming");
   const [stepIndex, setStepIndex] = useState<number>(0);
@@ -162,7 +164,7 @@ export const ParentWhisperMode: React.FC<ParentWhisperModeProps> = ({
   const currentScenario = WHISPER_SCENARIOS[activeCategory];
   const steps = currentScenario.steps;
   const currentStep = steps[stepIndex] || steps[0];
-  const currentText = currentStep ? currentStep[selectedLang] : "";
+  const currentText = currentStep ? (currentStep[selectedLang] || "").replace(/Liam/g, childName) : "";
 
   // TTS / Voice engine simulated or browser native speech synthesis
   const speakCurrentStep = () => {
@@ -261,13 +263,13 @@ export const ParentWhisperMode: React.FC<ParentWhisperModeProps> = ({
               <Headphones className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <h2 className={`text-2xl font-semibold font-display tracking-tight ${textPrimaryClass}`}>
-              {selectedLang === "sp" ? "🤫 Modo Susurro Liam" : "🤫 Parent Whisper Mode"}
+              {selectedLang === "sp" ? "🤫 Modo Susurro" : "🤫 Parent Whisper Mode"}
             </h2>
           </div>
           <p className={`text-xs ${textSecondaryClass} font-medium`}>
             {selectedLang === "sp" 
-              ? "Guía discreta en pantalla gigante y audio suave para conectar con Liam sin pantallas ruidosas."
-              : "Earbud-friendly stealth guidelines to coordinate sensory regulation calmly."
+              ? `Guía discreta en pantalla gigante y audio suave para conectar con ${childName} sin pantallas ruidosas.`
+              : `Earbud-friendly stealth guidelines to coordinate sensory regulation calmly with ${childName}.`
             }
           </p>
         </div>
@@ -429,8 +431,8 @@ export const ParentWhisperMode: React.FC<ParentWhisperModeProps> = ({
           </h4>
           <p className="text-[11px] text-gray-400 leading-relaxed font-medium">
             {selectedLang === "sp"
-              ? "Ponle audífonos al teléfono o míralo con brillo bajo. Estas guías están escritas con letra muy grande para que puedas leerlas a la distancia sin que Liam se distraiga con luces brillantes de la pantalla."
-              : "Pop an earbud into one ear, keep your device at an angle or low brightness. The massive high-contrast font permits effortless reading from a distance, allowing you to focus completely on eye contact and posture with Liam."
+              ? `Ponle audífonos al teléfono o míralo con brillo bajo. Estas guías están escritas con letra muy grande para que puedas leerlas a la distancia sin que ${childName} se distraiga con luces brillantes de la pantalla.`
+              : `Pop an earbud into one ear, keep your device at an angle or low brightness. The massive high-contrast font permits effortless reading from a distance, allowing you to focus completely on eye contact and posture with ${childName}.`
             }
           </p>
         </div>

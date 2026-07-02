@@ -33,6 +33,8 @@ interface MissionAnywhereProps {
   logEvent: (type: "info" | "success" | "warning", message: string) => void;
   setNotifications: React.Dispatch<React.SetStateAction<any[]>>;
   setCurrentCalmProgress: React.Dispatch<React.SetStateAction<number>>;
+  childName?: string;
+  parentName?: string;
 }
 
 // Data structures for selectors
@@ -259,7 +261,9 @@ export const MissionAnywhere: React.FC<MissionAnywhereProps> = ({
   lang,
   logEvent,
   setNotifications,
-  setCurrentCalmProgress
+  setCurrentCalmProgress,
+  childName,
+  parentName
 }) => {
   // Navigation wizard states
   const [step, setStep] = useState<"location" | "duration" | "goal" | "generating" | "card">("location");
@@ -276,12 +280,27 @@ export const MissionAnywhere: React.FC<MissionAnywhereProps> = ({
   const [timerCount, setTimerCount] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
 
+  const child = childName || "Aarav";
+  const parent = parentName || "Sarah";
+
+  const sanitizeText = (txt: string) => {
+    if (!txt) return "";
+    let s = txt;
+    s = s.replace(/Liam Henderson/g, child);
+    s = s.replace(/Liam/g, child);
+    s = s.replace(/Sarah Hendrickx/g, "AutisticPath Author");
+    s = s.replace(/Dr\. Miller/g, "Connected Therapist");
+    s = s.replace(/Dra\. Miller/g, "Terapeuta Asociada");
+    s = s.replace(/Sarah/g, parent);
+    return s;
+  };
+
   // Localization strings
   const strings = {
     title: { en: "Adventure Anywhere", es: "Aventura Anywhere", sp: "Juego en Cualquier Lugar" },
     subtitle: { 
-      en: "Design an instant therapeutic game for Liam based on where you are.", 
-      es: "Diseña un juego terapéutico al instante para Liam según donde se encuentren.", 
+      en: sanitizeText("Design an instant therapeutic game for Liam based on where you are."), 
+      es: sanitizeText("Diseña un juego terapéutico al instante para Liam según donde se encuentren."), 
       sp: "¡Elige opciones divertidas para crear un juego mágico para ti!" 
     },
     q1: { en: "1. Where are you right now?", es: "1. ¿Dónde se encuentran ahora?", sp: "1. ¿Dónde estás jugando hoy?" },
@@ -291,7 +310,7 @@ export const MissionAnywhere: React.FC<MissionAnywhereProps> = ({
     back: { en: "Back", es: "Atrás", sp: "Volver" },
     generating: { en: "Calibrating sensory parameters...", es: "Alineando parámetros sensoriales...", sp: "¡Cargando magia en tu pantalla!..." },
     generatingSub: { 
-      en: "Dr. Miller's framework is crafting a neurodivergent-friendly path.", 
+      en: sanitizeText("Dr. Miller's framework is crafting a neurodivergent-friendly path."), 
       es: "El sistema está adaptando actividades aprobadas por terapeutas clínicos.", 
       sp: "Espera un ratito mientras preparamos cosas muy divertidas." 
     },
@@ -306,8 +325,8 @@ export const MissionAnywhere: React.FC<MissionAnywhereProps> = ({
     resetBtn: { en: "New Adventure", es: "Nueva Aventura", sp: "Crear Otro Juego" },
     successHeader: { en: "MAGICAL PERFORMANCE COMPLETED!", es: "¡AVENTURA COMPLETADA CON ÉXITO!", sp: "¡Felicidades, Campeón!" },
     successMsg: {
-      en: "Liam successfully calibrated sensory thresholds! Dr. Miller has been notified.",
-      es: "¡Liam logró equilibrar sus estímulos! El reporte clínico fue enviado.",
+      en: sanitizeText("Liam successfully calibrated sensory thresholds! Dr. Miller has been notified."),
+      es: sanitizeText("¡Liam logró equilibrar sus estímulos! El reporte clínico fue enviado."),
       sp: "¡Lo lograste! Ganaste una estrella mágica y el doctor está súper feliz contigo."
     }
   };
@@ -375,10 +394,10 @@ export const MissionAnywhere: React.FC<MissionAnywhereProps> = ({
     
     // Add beautiful system notification
     const messages: Record<string, string> = {
-      en: `Adventure Log Sync: Liam completed "${mission.title}" in the ${mission.location}!`,
-      es: `Registro de Aventura: ¡Liam completó "${mission.title}" en la ${mission.location}!`,
-      sp: `🏆 ¡Aventura completada! Liam usó el poder de ${mission.goal} en la ${mission.location}.`,
-      hi: `🏆 रोमांच पूरा हुआ! लियाम ने रोमांच पूरा किया।`
+      en: sanitizeText(`Adventure Log Sync: Liam completed "${mission.title}" in the ${mission.location}!`),
+      es: sanitizeText(`Registro de Aventura: ¡Liam completó "${mission.title}" en la ${mission.location}!`),
+      sp: sanitizeText(`🏆 ¡Aventura completada! Liam usó el poder de ${mission.goal} en la ${mission.location}.`),
+      hi: sanitizeText(`🏆 रोमांच पूरा हुआ! लियाम ने रोमांच पूरा किया।`)
     };
 
     setNotifications((prev) => [
