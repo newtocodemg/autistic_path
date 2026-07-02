@@ -1,0 +1,6 @@
+{
+  "name": "AutisticPath",
+  "description": "A calm, warm, and premium family-centered healthcare workspace for autism sensory therapy and progress tracking, inspired by Apple Health, Calm, and Headspace.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
