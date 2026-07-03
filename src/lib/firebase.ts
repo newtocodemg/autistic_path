@@ -1,17 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  sendPasswordResetEmail, 
-  GoogleAuthProvider, 
-  signInWithPopup,
-  onAuthStateChanged,
-  signInAnonymously,
-  User
-} from "firebase/auth";
-import { 
   getFirestore, 
   enableIndexedDbPersistence,
   doc, 
@@ -32,7 +20,6 @@ import firebaseConfig from "../../firebase-applet-config.json";
 
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 
 // Enable Firestore persistent offline cache
@@ -42,15 +29,14 @@ if (typeof window !== "undefined") {
   });
 }
 
+// Custom simple User interface for Version 1 Demo
+export interface User {
+  uid: string;
+  email: string;
+  displayName: string;
+}
+
 export { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
-  sendPasswordResetEmail, 
-  GoogleAuthProvider, 
-  signInWithPopup,
-  onAuthStateChanged,
-  signInAnonymously,
   doc,
   setDoc,
   getDoc,
@@ -64,4 +50,3 @@ export {
   orderBy,
   limit
 };
-export type { User };

@@ -1,22 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
-  auth, 
   db, 
-  onAuthStateChanged,
   doc, 
-  getDoc, 
   setDoc, 
   updateDoc, 
   collection, 
   getDocs, 
-  addDoc, 
-  query, 
-  where, 
-  orderBy,
-  deleteDoc,
   User
 } from "./firebase";
 import { ChildProfile, ParentProfile, TherapySession, generateWeeklyPlan } from "./personalization";
+import { 
+  MOCK_PARENT, 
+  MOCK_CHILD, 
+  MOCK_SESSION_LOGS, 
+  MOCK_MILESTONES, 
+  MOCK_STORIES 
+} from "./demoData";
 
 // Interfaces for our SaaS database
 export interface SessionLog {
@@ -119,6 +118,7 @@ interface SaasContextType {
   setDarkMode: (dark: boolean) => void;
   updateNotificationsConfig: (config: Record<string, boolean>) => Promise<void>;
   deleteUserAccount: () => Promise<void>;
+  resetDemoData: () => void;
 }
 
 const SaasContext = createContext<SaasContextType | undefined>(undefined);
@@ -131,15 +131,24 @@ const DEFAULT_NOTIFICATIONS = {
   newStory: true
 };
 
+const DEMO_USER: User = {
+  uid: "demo-user-123",
+  email: "demo@autisticpath.com",
+  displayName: "Sarah"
+};
+
 export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children: reactChildren }) => {
-  const [user, setUser] = useState<User | null>(null);
+  // Constant mock user to bypass all auth screen logic
+  const [user] = useState<User | null>(DEMO_USER);
   const [loading, setLoading] = useState(true);
-  const [parent, setParent] = useState<ParentProfile | null>(null);
+  
+  // Localized states
+  const [parent, setParentState] = useState<ParentProfile | null>(null);
   const [childrenList, setChildrenList] = useState<ChildProfile[]>([]);
   const [activeChildId, setActiveChildId] = useState<string | null>(null);
   const [sessionLogs, setSessionLogs] = useState<SessionLog[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [customStories, setCustomStories] = useState<SharedStory[]>([]);
+  const [customStories, setCustomStories] = useState<SharedStory[]>(MOCK_STORIES);
   const [notificationsConfig, setNotificationsConfig] = useState<Record<string, boolean>>(DEFAULT_NOTIFICATIONS);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [readingHistory, setReadingHistory] = useState<string[]>([]);
@@ -151,12 +160,12 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Compute Weekly Progress
   const weeklyProgress = activeChild 
-    ? Math.min(100, Math.round((sessionLogs.filter(log => activeChild.sessions.some(s => s.id === log.sessionId)).length / 3) * 100)) 
+    ? Math.min(100, Math.round((sessionLogs.filter(log => activeChild.sessions?.some(s => s.id === log.sessionId)).length / 3) * 100)) 
     : 0;
 
   const goalCompletedThisWeek = weeklyProgress >= 100;
 
-  // Dark mode effect
+  // Dark mode handler
   const setDarkMode = (dark: boolean) => {
     setDarkModeState(dark);
     localStorage.setItem("autisticpath_dark", dark ? "true" : "false");
@@ -167,238 +176,185 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // 1. Initial Load of Demo & Local Data
   useEffect(() => {
+    // Light/Dark mode
     const isDarkCached = localStorage.getItem("autisticpath_dark") === "true";
     setDarkMode(isDarkCached);
-  }, []);
 
-  // Listen to Auth State
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        await loadUserData(currentUser);
-      } else {
-        // Reset state on logout
-        setParent(null);
-        setChildrenList([]);
-        setActiveChildId(null);
-        setSessionLogs([]);
-        setMilestones([]);
-        setTodaysSession(null);
+    // Initial load from localStorage with fallback to pristine demo state
+    const cachedParent = localStorage.getItem("demo_parent");
+    const cachedChildren = localStorage.getItem("demo_children");
+    const cachedActiveId = localStorage.getItem("demo_active_child_id");
+    const cachedLogs = localStorage.getItem("demo_session_logs");
+    const cachedMilestones = localStorage.getItem("demo_milestones");
+    const cachedBookmarks = localStorage.getItem("demo_bookmarks");
+    const cachedReadingHistory = localStorage.getItem("demo_reading_history");
+    const cachedNotifications = localStorage.getItem("demo_notifications_config");
+
+    let loadedParent: ParentProfile;
+    if (cachedParent) {
+      loadedParent = JSON.parse(cachedParent);
+    } else {
+      loadedParent = MOCK_PARENT;
+      localStorage.setItem("demo_parent", JSON.stringify(MOCK_PARENT));
+    }
+    setParentState(loadedParent);
+
+    let loadedChildren: ChildProfile[];
+    if (cachedChildren) {
+      loadedChildren = JSON.parse(cachedChildren);
+    } else {
+      // Setup default mock child with sessions generated on the fly
+      const childWithNoSessions = { ...MOCK_CHILD };
+      const generatedSessions = generateWeeklyPlan(childWithNoSessions);
+      const childWithSessions: ChildProfile = {
+        ...childWithNoSessions,
+        sessions: generatedSessions
+      };
+      loadedChildren = [childWithSessions];
+      localStorage.setItem("demo_children", JSON.stringify([childWithSessions]));
+    }
+    setChildrenList(loadedChildren);
+
+    let loadedActiveId = cachedActiveId || loadedChildren[0]?.id || null;
+    setActiveChildId(loadedActiveId);
+    if (!cachedActiveId && loadedActiveId) {
+      localStorage.setItem("demo_active_child_id", loadedActiveId);
+    }
+
+    let loadedLogs: SessionLog[];
+    if (cachedLogs) {
+      loadedLogs = JSON.parse(cachedLogs);
+    } else {
+      loadedLogs = MOCK_SESSION_LOGS;
+      localStorage.setItem("demo_session_logs", JSON.stringify(MOCK_SESSION_LOGS));
+    }
+    setSessionLogs(loadedLogs);
+
+    let loadedMilestones: Milestone[];
+    if (cachedMilestones) {
+      loadedMilestones = JSON.parse(cachedMilestones);
+    } else {
+      loadedMilestones = MOCK_MILESTONES;
+      localStorage.setItem("demo_milestones", JSON.stringify(MOCK_MILESTONES));
+    }
+    setMilestones(loadedMilestones);
+
+    if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
+    if (cachedReadingHistory) setReadingHistory(JSON.parse(cachedReadingHistory));
+    if (cachedNotifications) setNotificationsConfig(JSON.parse(cachedNotifications));
+
+    // Load active therapy session
+    const activeChildObj = loadedChildren.find(c => c.id === loadedActiveId) || loadedChildren[0];
+    if (activeChildObj && activeChildObj.sessions) {
+      const completedIds = loadedLogs.map(l => l.sessionId);
+      const incomplete = activeChildObj.sessions.find(s => !completedIds.includes(s.id));
+      setTodaysSession(incomplete || activeChildObj.sessions[0] || null);
+    }
+
+    // Attempt to load live community stories from firestore if possible, otherwise rely on MOCK_STORIES
+    const loadLiveStories = async () => {
+      try {
+        const storiesSnap = await getDocs(collection(db, "stories"));
+        if (!storiesSnap.empty) {
+          const storiesList = storiesSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedStory));
+          setCustomStories(storiesList);
+        }
+      } catch (err) {
+        console.info("[Demo Mode] Firestore stories fetching bypassed. Using high-fidelity local demo stories.");
       }
+    };
+    loadLiveStories();
+
+    // End loading with a professional delay to simulate clinical system syncing
+    const timer = setTimeout(() => {
       setLoading(false);
-    });
-    return () => unsubscribe();
+    }, 750);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // Load SaaS dynamic user data from Firestore
-  const loadUserData = async (currentUser: User) => {
-    try {
-      const userDocRef = doc(db, "users", currentUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
+  // Reset Demo Data helper (extremely useful for parents and investors)
+  const resetDemoData = () => {
+    localStorage.removeItem("demo_parent");
+    localStorage.removeItem("demo_children");
+    localStorage.removeItem("demo_active_child_id");
+    localStorage.removeItem("demo_session_logs");
+    localStorage.removeItem("demo_milestones");
+    localStorage.removeItem("demo_bookmarks");
+    localStorage.removeItem("demo_reading_history");
+    localStorage.removeItem("demo_notifications_config");
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        setParent(userData.parent || null);
-        setChildrenList(userData.children || []);
-        setActiveChildId(userData.activeChildId || null);
-        setBookmarks(userData.bookmarks || []);
-        setReadingHistory(userData.readingHistory || []);
-        setNotificationsConfig(userData.notificationsConfig || DEFAULT_NOTIFICATIONS);
-        
-        // Save local copies to localStorage as offline fallbacks
-        localStorage.setItem(`saas_parent_${currentUser.uid}`, JSON.stringify(userData.parent || null));
-        localStorage.setItem(`saas_children_${currentUser.uid}`, JSON.stringify(userData.children || []));
-        localStorage.setItem(`saas_activeChildId_${currentUser.uid}`, userData.activeChildId || "");
-        localStorage.setItem(`saas_bookmarks_${currentUser.uid}`, JSON.stringify(userData.bookmarks || []));
-        localStorage.setItem(`saas_readingHistory_${currentUser.uid}`, JSON.stringify(userData.readingHistory || []));
-        localStorage.setItem(`saas_notificationsConfig_${currentUser.uid}`, JSON.stringify(userData.notificationsConfig || DEFAULT_NOTIFICATIONS));
+    // Re-initialize state
+    setParentState(MOCK_PARENT);
+    const childWithNoSessions = { ...MOCK_CHILD };
+    const generatedSessions = generateWeeklyPlan(childWithNoSessions);
+    const childWithSessions: ChildProfile = {
+      ...childWithNoSessions,
+      sessions: generatedSessions
+    };
+    setChildrenList([childWithSessions]);
+    setActiveChildId(childWithSessions.id);
+    setSessionLogs(MOCK_SESSION_LOGS);
+    setMilestones(MOCK_MILESTONES);
+    setBookmarks([]);
+    setReadingHistory([]);
+    setNotificationsConfig(DEFAULT_NOTIFICATIONS);
 
-        // Load sessions, logs, milestones
-        await loadSubcollections(currentUser.uid, userData.children || []);
-      } else {
-        // Look in localStorage for guest migration if they just registered
-        const localParent = localStorage.getItem("autisticpath_parent");
-        const localChildren = localStorage.getItem("autisticpath_children");
-        const localActiveChildId = localStorage.getItem("autisticpath_active_child_id");
-
-        if (localParent && localChildren) {
-          const parsedParent = JSON.parse(localParent);
-          const parsedChildren = JSON.parse(localChildren);
-          const activeId = localActiveChildId || parsedChildren[0]?.id || "child-active";
-
-          // Save guest data directly to firestore
-          const initialData = {
-            parent: parsedParent,
-            children: parsedChildren,
-            activeChildId: activeId,
-            bookmarks: [],
-            readingHistory: [],
-            notificationsConfig: DEFAULT_NOTIFICATIONS,
-            createdAt: new Date().toISOString()
-          };
-
-          try {
-            await setDoc(userDocRef, initialData);
-          } catch (setErr) {
-            console.warn("Failed to set initial user document online, continuing in offline sandbox mode:", setErr);
-          }
-          
-          setParent(parsedParent);
-          setChildrenList(parsedChildren);
-          setActiveChildId(activeId);
-          await loadSubcollections(currentUser.uid, parsedChildren);
-        }
-      }
-      
-      // Load global stories
-      await fetchGlobalStories();
-    } catch (err) {
-      console.warn("Offline or failed loading secure online SaaS data. Restoring offline local fallback copy:", err);
-      
-      // Fallback from localStorage copies
-      const cachedParent = localStorage.getItem(`saas_parent_${currentUser.uid}`);
-      const cachedChildren = localStorage.getItem(`saas_children_${currentUser.uid}`);
-      const cachedActiveId = localStorage.getItem(`saas_activeChildId_${currentUser.uid}`);
-      const cachedBookmarks = localStorage.getItem(`saas_bookmarks_${currentUser.uid}`);
-      const cachedReadingHistory = localStorage.getItem(`saas_readingHistory_${currentUser.uid}`);
-      const cachedNotificationsConfig = localStorage.getItem(`saas_notificationsConfig_${currentUser.uid}`);
-
-      if (cachedParent && cachedChildren) {
-        setParent(JSON.parse(cachedParent));
-        const parsedChildren = JSON.parse(cachedChildren);
-        setChildrenList(parsedChildren);
-        const activeId = cachedActiveId || parsedChildren[0]?.id || null;
-        setActiveChildId(activeId);
-        
-        if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
-        if (cachedReadingHistory) setReadingHistory(JSON.parse(cachedReadingHistory));
-        if (cachedNotificationsConfig) setNotificationsConfig(JSON.parse(cachedNotificationsConfig));
-
-        // Restore subcollections fallback
-        const cachedLogs = localStorage.getItem(`saas_logs_${currentUser.uid}`);
-        const cachedMilestones = localStorage.getItem(`saas_milestones_${currentUser.uid}`);
-        const logsList = cachedLogs ? JSON.parse(cachedLogs) : [];
-        setSessionLogs(logsList);
-        if (cachedMilestones) setMilestones(JSON.parse(cachedMilestones));
-
-        // Resolve active session
-        const activeChildObj = parsedChildren.find((c: any) => c.id === activeId) || parsedChildren[0];
-        if (activeChildObj) {
-          const completedIds = logsList.map((l: any) => l.sessionId);
-          const incomplete = activeChildObj.sessions?.find((s: any) => !completedIds.includes(s.id));
-          setTodaysSession(incomplete || activeChildObj.sessions?.[0] || null);
-        }
-      }
+    if (childWithSessions.sessions) {
+      const completedIds = MOCK_SESSION_LOGS.map(l => l.sessionId);
+      const incomplete = childWithSessions.sessions.find(s => !completedIds.includes(s.id));
+      setTodaysSession(incomplete || childWithSessions.sessions[0] || null);
     }
   };
 
-  // Load logs, milestones and current therapy session recommendations
-  const loadSubcollections = async (userId: string, currentChildren: ChildProfile[]) => {
-    try {
-      // 1. Logs
-      const logsSnap = await getDocs(collection(db, "users", userId, "logs"));
-      const logsList = logsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SessionLog));
-      setSessionLogs(logsList);
-      localStorage.setItem(`saas_logs_${userId}`, JSON.stringify(logsList));
-
-      // 2. Milestones
-      const milestonesSnap = await getDocs(collection(db, "users", userId, "milestones"));
-      const mList = milestonesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Milestone));
-      setMilestones(mList);
-      localStorage.setItem(`saas_milestones_${userId}`, JSON.stringify(mList));
-
-      // 3. Resolve active session from child's generated sessions
-      const activeChildObj = currentChildren.find(c => c.id === activeChildId) || currentChildren[0];
-      if (activeChildObj) {
-        if (!activeChildObj.sessions || activeChildObj.sessions.length === 0) {
-          // Generate active session list dynamically
-          const generated = generateWeeklyPlan(activeChildObj);
-          activeChildObj.sessions = generated;
-          // Save back
-          await updateChildInList(userId, activeChildObj.id, { sessions: generated }, currentChildren);
-        }
-
-        // Today's session is the first incomplete session
-        const completedIds = logsList.map(l => l.sessionId);
-        const incomplete = activeChildObj.sessions.find(s => !completedIds.includes(s.id));
-        setTodaysSession(incomplete || activeChildObj.sessions[0] || null);
-      }
-    } catch (err) {
-      console.warn("Failed fetching logs/milestones, loading offline fallback copy:", err);
-      const cachedLogs = localStorage.getItem(`saas_logs_${userId}`);
-      const cachedMilestones = localStorage.getItem(`saas_milestones_${userId}`);
-      
-      const logsList = cachedLogs ? JSON.parse(cachedLogs) : [];
-      setSessionLogs(logsList);
-      if (cachedMilestones) setMilestones(JSON.parse(cachedMilestones));
-
-      const activeChildObj = currentChildren.find(c => c.id === activeChildId) || currentChildren[0];
-      if (activeChildObj) {
-        const completedIds = logsList.map((l: any) => l.sessionId);
-        const incomplete = activeChildObj.sessions?.find(s => !completedIds.includes(s.id));
-        setTodaysSession(incomplete || activeChildObj.sessions?.[0] || null);
-      }
-    }
-  };
-
-  // Helper: update child profile directly inside user children array
-  const updateChildInList = async (userId: string, childId: string, updates: Partial<ChildProfile>, currentList: ChildProfile[]) => {
+  // Helper: update child profile directly inside state and localStorage
+  const updateChildInListLocal = (childId: string, updates: Partial<ChildProfile>, currentList: ChildProfile[]) => {
     const updatedList = currentList.map(c => {
       if (c.id === childId) {
-        return { ...c, ...updates };
+        const updated = { ...c, ...updates };
+        // If interests or weekly goal changed, let's regenerate sessions dynamically
+        if (updates.weeklyGoal || updates.interests) {
+          updated.sessions = generateWeeklyPlan(updated);
+        }
+        return updated;
       }
       return c;
     });
     setChildrenList(updatedList);
-    const userDocRef = doc(db, "users", userId);
-    try {
-      await updateDoc(userDocRef, { children: updatedList });
-    } catch (err) {
-      console.warn("Could not save child profile updates to server (offline), saved locally:", err);
-    }
-    localStorage.setItem(`saas_children_${userId}`, JSON.stringify(updatedList));
-  };
+    localStorage.setItem("demo_children", JSON.stringify(updatedList));
 
-  // Fetch Global Shared Stories
-  const fetchGlobalStories = async () => {
-    try {
-      const storiesSnap = await getDocs(collection(db, "stories"));
-      const storiesList = storiesSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedStory));
-      setCustomStories(storiesList);
-      localStorage.setItem("saas_global_stories", JSON.stringify(storiesList));
-    } catch (err) {
-      console.warn("Could not load public stories from server (offline), reading cached stories:", err);
-      const cachedStories = localStorage.getItem("saas_global_stories");
-      if (cachedStories) setCustomStories(JSON.parse(cachedStories));
+    // Also update today's session based on current logs
+    const activeChildObj = updatedList.find(c => c.id === activeChildId) || updatedList[0];
+    if (activeChildObj && activeChildObj.sessions) {
+      const completedIds = sessionLogs.map(l => l.sessionId);
+      const incomplete = activeChildObj.sessions.find(s => !completedIds.includes(s.id));
+      setTodaysSession(incomplete || activeChildObj.sessions[0] || null);
     }
   };
 
   // ACTIONS
   const signUp = async (displayName: string) => {
-    // Registered successfully. Handle display name mapping if needed.
+    // No-op for demo mode
   };
 
   const logOut = async () => {
-    await auth.signOut();
+    // Lock/Sign out resets the demo so a new showcase is clean!
+    resetDemoData();
   };
 
   const updateParentProfile = async (data: Partial<ParentProfile>) => {
-    if (!user) return;
     const newParent = { ...parent, ...data } as ParentProfile;
-    setParent(newParent);
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { parent: newParent });
+    setParentState(newParent);
+    localStorage.setItem("demo_parent", JSON.stringify(newParent));
   };
 
   const updateChildProfile = async (childId: string, data: Partial<ChildProfile>) => {
-    if (!user) return;
-    await updateChildInList(user.uid, childId, data, childrenList);
+    updateChildInListLocal(childId, data, childrenList);
   };
 
   const addChild = async (childData: Omit<ChildProfile, "id" | "sessions" | "completedSessions" | "progressScore" | "completedAdventuresCount">) => {
-    if (!user) return;
     const childId = "child-" + Math.random().toString(36).substring(2, 9);
     const newChild: ChildProfile = {
       ...childData,
@@ -416,12 +372,11 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newList = [...childrenList, newChild];
     setChildrenList(newList);
     setActiveChildId(childId);
+    localStorage.setItem("demo_children", JSON.stringify(newList));
+    localStorage.setItem("demo_active_child_id", childId);
     
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { 
-      children: newList,
-      activeChildId: childId
-    });
+    // Set today's session
+    setTodaysSession(generated[0]);
 
     // Auto milestone for adding new child profile
     await addCustomMilestone(
@@ -432,32 +387,29 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteChild = async (childId: string) => {
-    if (!user) return;
     const newList = childrenList.filter(c => c.id !== childId);
     setChildrenList(newList);
     const nextActive = newList[0]?.id || null;
     setActiveChildId(nextActive);
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { 
-      children: newList,
-      activeChildId: nextActive
-    });
+    localStorage.setItem("demo_children", JSON.stringify(newList));
+    if (nextActive) {
+      localStorage.setItem("demo_active_child_id", nextActive);
+    } else {
+      localStorage.removeItem("demo_active_child_id");
+    }
   };
 
   // Generate Tomorrow's Recommendation
   const generateNewSession = async () => {
-    if (!user || !activeChild) return;
-    // Append or cycle sessions
+    if (!activeChild) return;
     const generated = generateWeeklyPlan(activeChild);
-    // Shuffle or customize to ensure it's not repetitive
     const shuffled = [...generated].sort(() => Math.random() - 0.5);
-    // Assign new IDs
     const refreshed = shuffled.map((s, idx) => ({
       ...s,
       id: `session-fresh-${idx}-${Date.now()}`
     }));
 
-    await updateChildInList(user.uid, activeChild.id, { sessions: refreshed }, childrenList);
+    updateChildInListLocal(activeChild.id, { sessions: refreshed }, childrenList);
     setTodaysSession(refreshed[0]);
   };
 
@@ -470,7 +422,7 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     childMood: string, 
     parentNotes: string
   ) => {
-    if (!user || !activeChild) return;
+    if (!activeChild) return;
 
     const logId = "log-" + Math.random().toString(36).substring(2, 9);
     const newLog: SessionLog = {
@@ -484,19 +436,18 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       parentNotes
     };
 
-    // Save to subcollection
-    const logDocRef = doc(db, "users", user.uid, "logs", logId);
-    await setDoc(logDocRef, newLog);
-    setSessionLogs(prev => [...prev, newLog]);
+    const updatedLogs = [...sessionLogs, newLog];
+    setSessionLogs(updatedLogs);
+    localStorage.setItem("demo_session_logs", JSON.stringify(updatedLogs));
 
     // Update child progress metrics
     const newCount = (activeChild.completedAdventuresCount || 0) + 1;
     const updatedCompletedSessions = [...(activeChild.completedSessions || []), sessionId];
     
-    // Auto-update score (adds +4 resilience, max 100)
+    // Auto-update score
     const newScore = Math.min(100, (activeChild.progressScore || 85) + 4);
 
-    await updateChildInList(user.uid, activeChild.id, {
+    updateChildInListLocal(activeChild.id, {
       completedAdventuresCount: newCount,
       completedSessions: updatedCompletedSessions,
       progressScore: newScore
@@ -512,8 +463,8 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Refresh today's recommendations
-    const completedIds = [...sessionLogs.map(l => l.sessionId), sessionId];
-    const incomplete = activeChild.sessions.find(s => !completedIds.includes(s.id));
+    const completedIds = [...updatedLogs.map(l => l.sessionId)];
+    const incomplete = activeChild.sessions?.find(s => !completedIds.includes(s.id));
     if (incomplete) {
       setTodaysSession(incomplete);
     } else {
@@ -522,7 +473,7 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const generateNextWeeklyGoal = async (currentGoal: string) => {
-    if (!user || !activeChild) return;
+    if (!activeChild) return;
     const goalPool = [
       "Improve Communication",
       "Improve Eye Contact",
@@ -532,15 +483,15 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ].filter(g => g !== currentGoal);
     
     const nextGoal = goalPool[Math.floor(Math.random() * goalPool.length)];
-    await updateChildInList(user.uid, activeChild.id, { weeklyGoal: nextGoal }, childrenList);
+    updateChildInListLocal(activeChild.id, { weeklyGoal: nextGoal }, childrenList);
     
     // Clear logs for new weekly cycle
     setSessionLogs([]);
+    localStorage.setItem("demo_session_logs", JSON.stringify([]));
     await addCustomMilestone("New Weekly Track Set!", `Transitioned to: ${nextGoal}`, "goal");
   };
 
   const addCustomMilestone = async (title: string, description: string, category: any = "manual") => {
-    if (!user) return;
     const mId = "m-" + Math.random().toString(36).substring(2, 9);
     const newM: Milestone = {
       id: mId,
@@ -551,9 +502,9 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isCustom: true
     };
 
-    const docRef = doc(db, "users", user.uid, "milestones", mId);
-    await setDoc(docRef, newM);
-    setMilestones(prev => [newM, ...prev]);
+    const updatedM = [newM, ...milestones];
+    setMilestones(updatedM);
+    localStorage.setItem("demo_milestones", JSON.stringify(updatedM));
   };
 
   // STORIES ACTIONS
@@ -564,72 +515,62 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: sId,
       likes: 1,
       encouragements: [],
-      status: "pending_moderation", // default to pending moderation
+      status: "approved", // auto approved for local demo ease
       userId: user?.uid || "guest"
     };
 
-    const docRef = doc(db, "stories", sId);
-    await setDoc(docRef, newStory);
-    setCustomStories(prev => [newStory, ...prev]);
+    const updatedStories = [newStory, ...customStories];
+    setCustomStories(updatedStories);
+
+    // Soft online push
+    try {
+      const docRef = doc(db, "stories", sId);
+      await setDoc(docRef, newStory);
+    } catch {
+      // safe fallback
+    }
   };
 
   const approveStory = async (storyId: string) => {
-    const docRef = doc(db, "stories", storyId);
-    await updateDoc(docRef, { status: "approved" });
     setCustomStories(prev => prev.map(s => s.id === storyId ? { ...s, status: "approved" } : s));
   };
 
   const likeStory = async (storyId: string) => {
-    const target = customStories.find(s => s.id === storyId);
-    if (!target) return;
-    const docRef = doc(db, "stories", storyId);
-    const liked = !target.likedByUser;
-    const newLikes = liked ? target.likes + 1 : Math.max(0, target.likes - 1);
-    await updateDoc(docRef, { 
-      likes: newLikes,
-      likedByUser: liked 
+    const updated = customStories.map(s => {
+      if (s.id === storyId) {
+        const liked = !s.likedByUser;
+        const newLikes = liked ? s.likes + 1 : Math.max(0, s.likes - 1);
+        return { ...s, likedByUser: liked, likes: newLikes };
+      }
+      return s;
     });
-    setCustomStories(prev => prev.map(s => s.id === storyId ? { ...s, likedByUser: liked, likes: newLikes } : s));
+    setCustomStories(updated);
   };
 
   const toggleBookmark = async (storyId: string) => {
-    if (!user) return;
     const isBookmarked = bookmarks.includes(storyId);
     const updated = isBookmarked 
       ? bookmarks.filter(id => id !== storyId) 
       : [...bookmarks, storyId];
     
     setBookmarks(updated);
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { bookmarks: updated });
+    localStorage.setItem("demo_bookmarks", JSON.stringify(updated));
   };
 
   const addReadingHistory = async (storyId: string) => {
-    if (!user) return;
     if (readingHistory.includes(storyId)) return;
     const updated = [...readingHistory, storyId];
     setReadingHistory(updated);
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { readingHistory: updated });
+    localStorage.setItem("demo_reading_history", JSON.stringify(updated));
   };
 
   const updateNotificationsConfig = async (config: Record<string, boolean>) => {
-    if (!user) return;
     setNotificationsConfig(config);
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { notificationsConfig: config });
+    localStorage.setItem("demo_notifications_config", JSON.stringify(config));
   };
 
   const deleteUserAccount = async () => {
-    if (!user) return;
-    try {
-      const userDocRef = doc(db, "users", user.uid);
-      await deleteDoc(userDocRef);
-      // Try to delete current user auth record
-      await user.delete();
-    } catch (err) {
-      console.error("Account deletion: ", err);
-    }
+    resetDemoData();
   };
 
   return (
@@ -672,7 +613,8 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setDarkMode,
       updateNotificationsConfig,
-      deleteUserAccount
+      deleteUserAccount,
+      resetDemoData
     }}>
       {reactChildren}
     </SaasContext.Provider>

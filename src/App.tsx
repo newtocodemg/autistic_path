@@ -47,7 +47,6 @@ import { ShareYourPath } from "./components/ShareYourPath";
 import { Onboarding } from "./components/Onboarding";
 import { ChildProfile, ParentProfile, TherapySession, getGoalLabel, generateWeeklyPlan } from "./lib/personalization";
 import { useSaas } from "./lib/SaasContext";
-import { AuthScreen } from "./components/AuthScreen";
 // @ts-ignore
 import whisperingWoodsHero from "./assets/images/whispering_woods_hero_1782753214681.jpg";
 // @ts-ignore
@@ -1020,59 +1019,25 @@ export default function App() {
     addReadingHistory,
     updateNotificationsConfig,
     deleteUserAccount,
-    setDarkMode
+    setDarkMode,
+    resetDemoData
   } = useSaas();
 
-  // Local fallback states for guest mode
-  const [guestParent, setGuestParent] = useState<ParentProfile | null>(() => {
-    const saved = localStorage.getItem("autisticpath_parent");
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const [guestChildren, setGuestChildren] = useState<ChildProfile[]>(() => {
-    const saved = localStorage.getItem("autisticpath_children");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [guestActiveChildId, setGuestActiveChildId] = useState<string | null>(() => {
-    const saved = localStorage.getItem("autisticpath_active_child_id");
-    return saved || null;
-  });
-
-  const [isGuest, setIsGuest] = useState(false);
-
-  // Compute resolved state parameters
-  const parent = user ? saasParent : guestParent;
-  const children = user ? saasChildren : guestChildren;
-  const activeChildId = user ? saasActiveChildId : guestActiveChildId;
+  // Simple, robust mappings to our context state
+  const parent = saasParent;
+  const children = saasChildren;
+  const activeChildId = saasActiveChildId;
 
   const setParent = (p: ParentProfile | null) => {
-    if (user) {
-      if (p) updateParentProfile(p);
-    } else {
-      setGuestParent(p);
-      if (p) localStorage.setItem("autisticpath_parent", JSON.stringify(p));
-      else localStorage.removeItem("autisticpath_parent");
-    }
+    if (p) updateParentProfile(p);
   };
 
   const setChildren = (c: ChildProfile[]) => {
-    if (user) {
-      // Handled directly inside context updates
-    } else {
-      setGuestChildren(c);
-      localStorage.setItem("autisticpath_children", JSON.stringify(c));
-    }
+    // Managed via context
   };
 
   const setActiveChildId = (id: string | null) => {
-    if (user) {
-      // update user doc with active child
-    } else {
-      setGuestActiveChildId(id);
-      if (id) localStorage.setItem("autisticpath_active_child_id", id);
-      else localStorage.removeItem("autisticpath_active_child_id");
-    }
+    if (id) updateChildProfile(id, {});
   };
 
   const activeChild = children.find(c => c.id === activeChildId) || children[0] || null;
@@ -1139,21 +1104,7 @@ export default function App() {
   };
 
   const handleSaveChildEdit = async () => {
-    if (user) {
-      await updateChildProfile(childForm.id, childForm);
-    } else {
-      const updatedChildren = children.map(c => c.id === childForm.id ? { 
-        ...c, 
-        ...childForm, 
-        sessions: generateWeeklyPlan({
-          ...childForm,
-          progressScore: c.progressScore,
-          completedAdventuresCount: c.completedAdventuresCount
-        }) 
-      } : c);
-      setChildren(updatedChildren);
-      localStorage.setItem("autisticpath_children", JSON.stringify(updatedChildren));
-    }
+    await updateChildProfile(childForm.id, childForm);
     setIsEditingChild(false);
     logEvent("success", `Updated child profile for ${childForm.name}.`);
   };
@@ -1185,54 +1136,14 @@ export default function App() {
 
   const handleSaveNewChild = async () => {
     if (!childForm.name) return;
-    if (user) {
-      await addChild(childForm);
-    } else {
-      const newChild: ChildProfile = {
-        ...childForm,
-        progressScore: 0,
-        completedAdventuresCount: 0,
-        completedSessions: [],
-        sessions: []
-      };
-      newChild.sessions = generateWeeklyPlan({
-        ...childForm,
-        progressScore: 0,
-        completedAdventuresCount: 0
-      });
-      const updatedChildren = [...children, newChild];
-      setChildren(updatedChildren);
-      setActiveChildId(newChild.id);
-      localStorage.setItem("autisticpath_children", JSON.stringify(updatedChildren));
-      localStorage.setItem("autisticpath_active_child_id", newChild.id);
-    }
+    await addChild(childForm);
     setIsAddingChild(false);
     logEvent("success", `Added new child profile for ${childForm.name}.`);
   };
 
   const handleDeleteChild = async (id: string) => {
-    if (user) {
-      await deleteChild(id);
-    } else {
-      const updatedChildren = children.filter(c => c.id !== id);
-      if (updatedChildren.length === 0) {
-        setParent(null);
-        setChildren([]);
-        setActiveChildId(null);
-        localStorage.removeItem("autisticpath_parent");
-        localStorage.removeItem("autisticpath_children");
-        localStorage.removeItem("autisticpath_active_child_id");
-        logEvent("warning", "Deleted last profile. Returning to onboarding.");
-      } else {
-        setChildren(updatedChildren);
-        localStorage.setItem("autisticpath_children", JSON.stringify(updatedChildren));
-        if (activeChildId === id) {
-          setActiveChildId(updatedChildren[0].id);
-          localStorage.setItem("autisticpath_active_child_id", updatedChildren[0].id);
-        }
-        logEvent("success", "Child profile deleted.");
-      }
-    }
+    await deleteChild(id);
+    logEvent("success", "Child profile deleted.");
   };
 
   const handleEditParentInit = () => {
@@ -1243,13 +1154,7 @@ export default function App() {
   };
 
   const handleSaveParentEdit = async () => {
-    if (user) {
-      await updateParentProfile(parentForm);
-    } else {
-      setParent(parentForm);
-      setLang(parentForm.language);
-      localStorage.setItem("autisticpath_parent", JSON.stringify(parentForm));
-    }
+    await updateParentProfile(parentForm);
     setEditingParent(false);
     logEvent("success", "Parent profile updated successfully.");
   };
@@ -1297,16 +1202,7 @@ export default function App() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [prevScrollY]);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const isSignedIn = !!user;
-  const handleCompleteSignOut = async () => {
-    if (user) {
-      await logOut();
-    }
-    setIsGuest(false);
-    setIsAuthenticated(true);
-    logEvent("info", "Successfully signed out of workspace.");
-  };
   const [searchQuery, setSearchQuery] = useState("");
   
   // Interactive Today's Mission Adventure State
@@ -1471,13 +1367,15 @@ export default function App() {
   };
 
   // Lock workspace mock interaction
+  const [isWorkspaceLocked, setIsWorkspaceLocked] = useState(false);
+
   const handleLockWorkspace = () => {
-    setIsAuthenticated(false);
+    setIsWorkspaceLocked(true);
     logEvent("info", t.lockMsg);
   };
 
   const handleUnlockWorkspace = () => {
-    setIsAuthenticated(true);
+    setIsWorkspaceLocked(false);
     logEvent("success", t.unlockedMsg);
   };
 
@@ -1573,7 +1471,7 @@ export default function App() {
   ];
 
   // Render Lock Screen if clicked Lock Workspace
-  if (!isAuthenticated) {
+  if (isWorkspaceLocked) {
     return (
       <div className={`min-h-screen ${shellBgClass} flex items-center justify-center p-6 font-sans select-none transition-colors duration-500`}>
         <motion.div
@@ -1634,40 +1532,14 @@ export default function App() {
     );
   }
 
-  if (!user && !isGuest) {
-    return (
-      <AuthScreen
-        theme={theme}
-        onAuthSuccess={(u) => {
-          setIsGuest(false);
-          logEvent("success", `Secure SaaS session initialized for ${u.email}`);
-        }}
-        onSkip={() => {
-          setIsGuest(true);
-          logEvent("info", "Guest session initialized in local sandbox mode");
-        }}
-        logEvent={logEvent}
-      />
-    );
-  }
-
   // Render Onboarding Screen if parent is not configured
   if (!parent) {
     return (
       <Onboarding
         theme={theme}
         onComplete={async (newParent, newChild) => {
-          if (user) {
-            await updateParentProfile(newParent);
-            await addChild(newChild);
-          } else {
-            setParent(newParent);
-            setChildren([newChild]);
-            setActiveChildId(newChild.id);
-            localStorage.setItem("autisticpath_parent", JSON.stringify(newParent));
-            localStorage.setItem("autisticpath_children", JSON.stringify([newChild]));
-            localStorage.setItem("autisticpath_active_child_id", newChild.id);
-          }
+          await updateParentProfile(newParent);
+          await addChild(newChild);
           setLang(newParent.language);
           logEvent("success", `Onboarding completed! Welcome ${newParent.parentName} and ${newChild.name}!`);
         }}
@@ -1727,24 +1599,6 @@ export default function App() {
 
           {/* Column 3: Right side controls - Right Aligned */}
           <div className="flex items-center justify-end gap-2 md:gap-3">
-            {!isSignedIn ? (
-              /* A. Sign In Button when user is not signed in */
-              <button
-                onClick={() => {
-                  setIsGuest(false);
-                  setIsAuthenticated(true);
-                }}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm ${
-                  theme === "light"
-                    ? "bg-brand-primary text-white hover:bg-brand-primary-hover"
-                    : "bg-teal-500 text-gray-900 hover:bg-teal-600"
-                }`}
-              >
-                Sign In
-              </button>
-            ) : (
-              /* B. Full controls when signed in */
-              <>
                 {/* 1. Language Switcher Dropdown */}
                 <div className="relative hidden md:block" ref={langRef}>
                   <button
@@ -1978,13 +1832,14 @@ export default function App() {
 
                             <button
                               onClick={() => {
-                                handleCompleteSignOut();
+                                resetDemoData();
                                 setProfileDropdownOpen(false);
+                                logEvent("success", "Pristine demo state restored successfully.");
                               }}
-                              className="w-full text-center py-2 px-3 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold transition-all cursor-pointer text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 mt-1"
+                              className="w-full text-center py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all cursor-pointer text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 mt-1"
                             >
-                              <Lock className="h-3.5 w-3.5 stroke-[2.5px]" />
-                              Sign Out / Lock
+                              <RefreshCw className="h-3.5 w-3.5 stroke-[2.5px]" />
+                              Reset Demo State
                             </button>
                           </div>
                         </div>
@@ -1992,8 +1847,6 @@ export default function App() {
                     )}
                   </AnimatePresence>
                 </div>
-              </>
-            )}
 
             {/* Mobile Menu Icon for small screens */}
             <button
@@ -2122,13 +1975,14 @@ export default function App() {
               {/* iOS Sign Out Button */}
               <button
                 onClick={() => {
-                  handleCompleteSignOut();
+                  resetDemoData();
                   setMobileMenuOpen(false);
+                  logEvent("success", "Pristine demo state restored successfully.");
                 }}
-                className="w-full text-center py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-extrabold transition-all cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full text-center py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold transition-all cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2"
               >
-                <Lock className="h-4 w-4 stroke-[2.5px]" />
-                Sign Out / Lock Workspace
+                <RefreshCw className="h-4 w-4 stroke-[2.5px]" />
+                Reset Demo State
               </button>
             </motion.div>
           )}
