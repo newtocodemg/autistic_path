@@ -1097,7 +1097,7 @@ export function ShareYourPath({
                     className="space-y-4"
                   >
                     <div className="p-4 rounded-premium bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/40 text-xs text-gray-500 leading-relaxed font-semibold">
-                      🔒 This form is HIPAA compliant and fully confidential. Tell us about your story setup.
+                      🔒 This form is fully secure and confidential. Tell us about your story setup.
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1458,7 +1458,7 @@ export function ShareYourPath({
                     </div>
 
                     <div className="p-4 rounded-premium bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 text-[11px] text-gray-400 font-medium">
-                      HIPAA Reference Code: AP-{Math.floor(100000 + Math.random() * 900000)}
+                      Story Reference Code: AP-{Math.floor(100000 + Math.random() * 900000)}
                     </div>
                   </motion.div>
                 )}

@@ -512,6 +512,127 @@ const STORYBOOK_ADVENTURES = [
   }
 ];
 
+const ADVENTURE_METADATA: Record<string, { emoji: string; themeName: string; storyTheme: string; bgGradient: string }> = {
+  space: { emoji: "🚀", themeName: "Cosmic Stardust Voyage", storyTheme: "Cosmic Exploration", bgGradient: "from-purple-500/15 via-indigo-500/5 to-transparent" },
+  ocean: { emoji: "🐋", themeName: "Serene Deep Sea Symphony", storyTheme: "Ocean Exploration", bgGradient: "from-cyan-500/15 via-blue-500/5 to-transparent" },
+  jungle: { emoji: "🦁", themeName: "Symphonic Canopy Expedition", storyTheme: "Jungle Expedition", bgGradient: "from-emerald-500/15 via-teal-500/5 to-transparent" },
+  treasure: { emoji: "🏴‍☠️", themeName: "Golden Sandbar Quest", storyTheme: "Treasure Hunting", bgGradient: "from-amber-500/15 via-orange-500/5 to-transparent" },
+  castle: { emoji: "🏰", themeName: "Echoing Citadel Quest", storyTheme: "Royal Guard Quest", bgGradient: "from-rose-500/15 via-pink-500/5 to-transparent" },
+  forest: { emoji: "🌲", themeName: "The Whispering Woods Journey", storyTheme: "Forest Grounding", bgGradient: "from-teal-500/15 via-[#00828A]/5 to-transparent" }
+};
+
+const BOOK_SUBTITLES: Record<string, Record<string, string>> = {
+  space: {
+    en: "Float silently through the stars and let the quiet galaxy guide your breath.",
+    es: "Flota en silencio por las estrellas y deja que la galaxia guíe tu respiración.",
+    sp: "¡Vuela muy alto entre las estrellas brillantes de nuestro cielo!",
+    hi: "तारों के बीच तैरें और ब्रह्मांड की शांति को महसूस करें।"
+  },
+  ocean: {
+    en: "Dive into calm blue waves and blow playful bubbles with friendly whales.",
+    es: "Sumérgete en olas tranquilas y sopla burbujas con ballenas amigables.",
+    sp: "¡Sumérgete en el mar azul y canta como las ballenas felices!",
+    hi: "शांत समुद्र की लहरों में उतरें और प्यारी व्हेल के साथ सांसें लें।"
+  },
+  jungle: {
+    en: "Listen to the birds and discover hidden canopy sounds in the leafy treetops.",
+    es: "Escucha a las aves y descubre sonidos ocultos entre las copas de los árboles.",
+    sp: "¡Sigue los divertidos sonidos de los pajaritos de la gran selva!",
+    hi: "चहकते पक्षियों की आवाजें सुनें और घने पत्तों में छुपे संगीत को खोजें।"
+  },
+  treasure: {
+    en: "Follow the golden shoreline and catch the breeze to steer your pirate ship.",
+    es: "Sigue la orilla dorada y aprovecha la brisa para guiar tu barco pirata.",
+    sp: "¡Sigue el mapa secreto y encuentra el cofre del tesoro brillante!",
+    hi: "सुनहरे किनारों पर चलें और अपने जहाज को सुरक्षित किनारे पर ले जाएं।"
+  },
+  castle: {
+    en: "Stand proud like a royal guard and feel the strength of the ancient stone castle.",
+    es: "Camina con orgullo como un guardia real y siente la fuerza del antiguo castillo.",
+    sp: "¡Conviértete en un valiente caballero y protege el gran reino!",
+    hi: "एक साहसी शाही रक्षक की तरह खड़े हों और प्राचीन किले की ताकत को महसूस करें।"
+  },
+  forest: {
+    en: "Listen to the whispering trees and breathe in the fresh coastal park breeze.",
+    es: "Escucha los árboles susurrantes y respira la brisa fresca del parque.",
+    sp: "¡Camina entre los árboles gigantes y respira el aire puro del bosque!",
+    hi: "सरसराते पेड़ों को सुनें और तटीय पार्क की ताजी हवा में सांस लें।"
+  }
+};
+
+const BOOK_DECOR: Record<string, {
+  spineBg: string;
+  coverBg: string;
+  accent: string;
+  glow: string;
+  heightOffset: number;
+}> = {
+  space: {
+    spineBg: "bg-indigo-950 text-indigo-200 border-indigo-900/60",
+    coverBg: "bg-purple-950",
+    accent: "text-purple-400",
+    glow: "shadow-[0_12px_30px_rgba(139,92,246,0.35)]",
+    heightOffset: 12
+  },
+  ocean: {
+    spineBg: "bg-sky-950 text-sky-200 border-sky-900/60",
+    coverBg: "bg-blue-950",
+    accent: "text-sky-400",
+    glow: "shadow-[0_12px_30px_rgba(14,165,233,0.35)]",
+    heightOffset: -8
+  },
+  jungle: {
+    spineBg: "bg-emerald-950 text-emerald-200 border-emerald-900/60",
+    coverBg: "bg-emerald-950",
+    accent: "text-emerald-400",
+    glow: "shadow-[0_12px_30px_rgba(16,185,129,0.35)]",
+    heightOffset: 6
+  },
+  treasure: {
+    spineBg: "bg-amber-950 text-amber-200 border-amber-900/60",
+    coverBg: "bg-stone-900",
+    accent: "text-amber-400",
+    glow: "shadow-[0_12px_30px_rgba(245,158,11,0.35)]",
+    heightOffset: -12
+  },
+  castle: {
+    spineBg: "bg-purple-950 text-purple-200 border-purple-900/60",
+    coverBg: "bg-fuchsia-950",
+    accent: "text-fuchsia-400",
+    glow: "shadow-[0_12px_30px_rgba(217,70,239,0.35)]",
+    heightOffset: 4
+  },
+  forest: {
+    spineBg: "bg-teal-950 text-teal-200 border-teal-900/60",
+    coverBg: "bg-teal-950",
+    accent: "text-teal-400",
+    glow: "shadow-[0_12px_30px_rgba(20,184,166,0.35)]",
+    heightOffset: -4
+  }
+};
+
+const getBookSkills = (id: string): string[] => {
+  switch (id) {
+    case "space": return ["Auditory Track", "Deep Breathing", "Calm Pausing"];
+    case "ocean": return ["Swaying Motion", "Rhythm Match", "Bubble Breath"];
+    case "jungle": return ["Sound Isolation", "Pacing Control", "Tactile Touch"];
+    case "treasure": return ["Visual Tracking", "Grounding Stone", "Exhale Power"];
+    case "castle": return ["Posture Check", "Proprioception", "Stress Exhale"];
+    default: return ["Auditory Track", "Deep Breathing", "4-7-8 Pattern"];
+  }
+};
+
+const getBookActivity = (id: string): string => {
+  switch (id) {
+    case "space": return "Launch asteroid rocket using silent slow astronaut breaths.";
+    case "ocean": return "Sway arms with sea tide sounds and blow deep-sea bubbles.";
+    case "jungle": return "Mimic a sleeping jaguar's deep calm breath in leafy woods.";
+    case "treasure": return "Draw sand map, trace stones, and blow the pirate sail home.";
+    case "castle": return "Walk tall like a castle guard, grounding with stone touch.";
+    default: return "Trace shoreline sounds, find flat stones, and use hand-breathing.";
+  }
+};
+
 // Type definition for Ledger Event
 interface ShellEvent {
   id: string;
@@ -1020,7 +1141,7 @@ export default function App() {
     updateNotificationsConfig,
     deleteUserAccount,
     setDarkMode,
-    resetDemoData
+    resetApplicationData
   } = useSaas();
 
   // Simple, robust mappings to our context state
@@ -1514,7 +1635,7 @@ export default function App() {
           {/* Clinical certification sign */}
           <div className="flex items-center gap-1.5 text-[9px] font-semibold tracking-wider uppercase text-gray-400">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            HIPAA Privacy Encrypted
+            Secure & Encrypted Workspace
           </div>
         </motion.div>
       </div>
@@ -1832,14 +1953,14 @@ export default function App() {
 
                             <button
                               onClick={() => {
-                                resetDemoData();
+                                resetApplicationData();
                                 setProfileDropdownOpen(false);
-                                logEvent("success", "Pristine demo state restored successfully.");
+                                logEvent("success", "Application state reset successfully.");
                               }}
                               className="w-full text-center py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all cursor-pointer text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 mt-1"
                             >
                               <RefreshCw className="h-3.5 w-3.5 stroke-[2.5px]" />
-                              Reset Demo State
+                              Reset Application Data
                             </button>
                           </div>
                         </div>
@@ -1975,14 +2096,14 @@ export default function App() {
               {/* iOS Sign Out Button */}
               <button
                 onClick={() => {
-                  resetDemoData();
+                  resetApplicationData();
                   setMobileMenuOpen(false);
-                  logEvent("success", "Pristine demo state restored successfully.");
+                  logEvent("success", "Application state reset successfully.");
                 }}
                 className="w-full text-center py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold transition-all cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2"
               >
                 <RefreshCw className="h-4 w-4 stroke-[2.5px]" />
-                Reset Demo State
+                Reset Application Data
               </button>
             </motion.div>
           )}
@@ -2050,6 +2171,476 @@ export default function App() {
                   </p>
                 </motion.div>
 
+                {/* CHOOSE TODAY'S STORYBOOK JOURNEY */}
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                  className="space-y-6 text-left"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className={`text-lg sm:text-xl font-black font-display tracking-tight ${textPrimaryClass}`}>
+                        Choose Today's Storybook Journey
+                      </h3>
+                      <p className={`text-xs ${textSecondaryClass} max-w-2xl mt-1 leading-relaxed`}>
+                        Choose a calming world that matches your child's interests. Every journey is designed to support today's therapy goals through playful storytelling.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout: Books standing upright on a single bookshelf */}
+                  <div className="hidden lg:block relative w-full py-10 px-8 rounded-[36px] bg-[#fdfaf5] dark:bg-[#121110]/20 border border-[#f0e6d2] dark:border-stone-850 shadow-premium-md overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9] to-[#f4eee0]/40 dark:from-stone-950/10 dark:to-stone-900/5 pointer-events-none" />
+                    
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="w-full flex items-end justify-center gap-7 min-h-[410px] pb-4 px-4">
+                        {STORYBOOK_ADVENTURES.map((adv, idx) => {
+                          const isSelected = selectedAdventureId === adv.id;
+                          const Icon = adv.icon;
+                          const advTitle = adv.title[lang] || adv.title.en;
+                          const advTag = adv.tag[lang] || adv.tag.en;
+                          const bookColor = BOOK_DECOR[adv.id] || BOOK_DECOR.forest;
+                          const heightOffset = bookColor.heightOffset;
+                          const calculatedHeight = 340 + heightOffset;
+
+                          return (
+                            <div
+                              key={`desktop-${adv.id}`}
+                              onClick={() => {
+                                setSelectedAdventureId(adv.id);
+                                logEvent("success", `Selected Storybook Journey: ${advTitle}`);
+                              }}
+                              style={{ height: `${calculatedHeight}px` }}
+                              className={`group relative w-[185px] transition-all duration-300 ease-out cursor-pointer z-10 select-none rounded-2xl overflow-visible flex flex-col justify-between p-5 border ${
+                                isSelected
+                                  ? `translate-y-[-16px] scale-[1.03] ${bookColor.glow} border-emerald-400/80 ring-2 ring-emerald-400/20 z-30`
+                                  : "hover:translate-y-[-8px] hover:scale-[1.03] hover:shadow-2xl border-white/10 hover:z-20"
+                              }`}
+                            >
+                              {/* Layered paper page edges visible on the right under the cover (simulating hardcover book page stack) */}
+                              <div className="absolute top-[5px] bottom-[5px] right-[-4px] w-[5px] bg-[#fbf9f5] dark:bg-stone-850 border-y border-r border-stone-300 dark:border-stone-750 rounded-r z-0 shadow-sm transition-transform duration-300 group-hover:translate-x-[2px] pointer-events-none" />
+                              <div className="absolute top-[9px] bottom-[9px] right-[-7px] w-[4px] bg-[#f5f1ea] dark:bg-stone-900 border-y border-r border-stone-200 dark:border-stone-800 rounded-r z-0 transition-transform duration-300 group-hover:translate-x-[3px] pointer-events-none opacity-80" />
+
+                              {/* Full-screen illustration image */}
+                              <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden pointer-events-none">
+                                <img
+                                  src={adv.image}
+                                  alt={advTitle}
+                                  className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-105 contrast-[1.02] saturate-[1.04]"
+                                  referrerPolicy="no-referrer"
+                                  loading="lazy"
+                                />
+                                {/* Vignette overlay */}
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_15%,rgba(0,0,0,0.45)_100%)] opacity-70 pointer-events-none" />
+                                {/* Soft transparent-to-black bottom gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+                              </div>
+
+                              {/* Textured spine on the left edge of the front cover to give it an authentic hardcover feel */}
+                              <div className="absolute left-0 top-0 bottom-0 w-[16px] bg-gradient-to-r from-black/30 via-black/10 to-transparent rounded-l-2xl z-20 pointer-events-none border-r border-white/5" />
+                              <div className="absolute left-[16px] top-0 bottom-0 w-[1px] bg-black/20 dark:bg-white/5 z-20 pointer-events-none" />
+                              <div className="absolute left-[17px] top-0 bottom-0 w-[1px] bg-white/10 dark:bg-black/25 z-20 pointer-events-none" />
+
+                              {/* Animated Selected Border */}
+                              {isSelected && (
+                                <div className="absolute inset-0 border-[2.5px] border-emerald-400 rounded-2xl z-30 pointer-events-none animate-pulse" />
+                              )}
+
+                              {/* Silk Ribbon Bookmark for Selected/Active Book */}
+                              {isSelected && (
+                                <div className="absolute top-[-10px] left-6 w-3.5 h-16 bg-rose-600 dark:bg-rose-500 rounded-b shadow-lg z-30 pointer-events-none origin-top animate-bounce-subtle">
+                                  <div className="absolute bottom-1 left-0 right-0 h-2 bg-black/15 rounded-b-sm" />
+                                  <div className="absolute bottom-0 left-0 right-0 h-0 w-0 border-l-[7px] border-r-[7px] border-b-[7px] border-b-transparent border-l-rose-600 border-r-rose-600 dark:border-l-rose-500 dark:border-r-rose-500" />
+                                </div>
+                              )}
+
+                              {/* Inside Cover Content: Top Section & Bottom Info */}
+                              <div className="relative z-10 flex flex-col justify-between h-full w-full pointer-events-none">
+                                {/* Top Bar: Icon on Left, Category or Active Badge on Right */}
+                                <div className="flex items-center justify-between w-full">
+                                  {/* Icon with glassmorphism style */}
+                                  <div className="p-2 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-xl border border-white/20 shadow-md">
+                                    <Icon className="h-4 w-4 text-white drop-shadow" />
+                                  </div>
+
+                                  {/* Badges */}
+                                  <div className="flex items-center gap-1.5">
+                                    {isSelected ? (
+                                      <span className="px-2.5 py-1 bg-emerald-500 text-white text-[8px] font-black rounded-full uppercase tracking-wider shadow-[0_4px_12px_rgba(16,185,129,0.35)] flex items-center gap-1">
+                                        <span className="text-[9px]">✓</span> {lang === 'es' ? 'Viaje de Hoy' : "Today's Journey"}
+                                      </span>
+                                    ) : (
+                                      <span className="px-2.5 py-1 bg-white/15 dark:bg-black/30 backdrop-blur-md border border-white/10 text-[8px] font-black text-white rounded-full uppercase tracking-widest shadow-sm">
+                                        {advTag}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Bottom Bar: Title, Subtitle, and Meta Row */}
+                                <div className="space-y-2 pt-16">
+                                  {/* Title with larger typography and soft shadow */}
+                                  <h4 className="text-sm sm:text-base font-black text-white font-display tracking-tight leading-snug line-clamp-2 uppercase [text-shadow:0_2px_4px_rgba(0,0,0,0.6)]">
+                                    {advTitle}
+                                  </h4>
+
+                                  {/* Short beautiful sentence */}
+                                  <p className="text-[10px] text-gray-200/90 font-medium leading-relaxed italic line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                                    "{BOOK_SUBTITLES[adv.id]?.[lang] || BOOK_SUBTITLES[adv.id]?.en}"
+                                  </p>
+
+                                  {/* Meta Row: Beautiful metadata */}
+                                  <div className="pt-2.5 border-t border-white/15 flex items-center justify-between text-[8px] text-gray-200 font-bold uppercase tracking-widest">
+                                    <span className="flex items-center gap-1">🕒 8 min</span>
+                                    <span className="flex items-center gap-1 max-w-[95px] truncate">🎯 {adv.goalLabel[lang] || adv.goalLabel.en}</span>
+                                    <span className="flex items-center gap-1">👶 Age 4–6</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Premium Ledge Shelf Ledge */}
+                      <div className="w-full relative z-20 mt-[-4px]">
+                        <div className="h-1 w-full bg-white/25 dark:bg-stone-800/10" />
+                        <div className="h-5 w-full bg-gradient-to-r from-amber-900/25 via-amber-800/35 to-amber-900/25 dark:from-[#2a1f18] dark:via-[#362a20] dark:to-[#2a1f18] rounded-md shadow-md border-t border-amber-800/25 dark:border-stone-800/60 relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                        </div>
+                        <div className="h-4 w-full bg-gradient-to-b from-black/15 to-transparent blur-[2px] pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tablet Layout: Double-Decker Shelf Grid (two rows of 3 books) */}
+                  <div className="hidden md:block lg:hidden space-y-8">
+                    {/* Row 1 (Books 0, 1, 2) */}
+                    <div className="relative w-full py-8 px-6 rounded-[28px] bg-[#fdfaf5] dark:bg-stone-900/40 border border-[#f0e6d2] dark:border-stone-850 shadow-premium-sm overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9] to-[#f4eee0]/45 dark:from-stone-950/10 dark:to-stone-900/5 pointer-events-none" />
+                      <div className="relative z-10">
+                        <div className="w-full flex items-end justify-around gap-6 min-h-[380px] pb-3">
+                          {STORYBOOK_ADVENTURES.slice(0, 3).map((adv, idx) => {
+                            const isSelected = selectedAdventureId === adv.id;
+                            const Icon = adv.icon;
+                            const advTitle = adv.title[lang] || adv.title.en;
+                            const advTag = adv.tag[lang] || adv.tag.en;
+                            const bookColor = BOOK_DECOR[adv.id] || BOOK_DECOR.forest;
+                            const heightOffset = bookColor.heightOffset;
+                            const calculatedHeight = 315 + heightOffset;
+
+                            return (
+                              <div
+                                key={`tablet-r1-${adv.id}`}
+                                onClick={() => {
+                                  setSelectedAdventureId(adv.id);
+                                  logEvent("success", `Selected Storybook Journey: ${advTitle}`);
+                                }}
+                                style={{ height: `${calculatedHeight}px` }}
+                                className={`group relative w-[185px] transition-all duration-300 ease-out cursor-pointer z-10 select-none rounded-2xl overflow-visible flex flex-col justify-between p-4.5 border ${
+                                  isSelected
+                                    ? `translate-y-[-14px] scale-[1.03] ${bookColor.glow} border-emerald-400/80 ring-2 ring-emerald-400/20 z-30`
+                                    : "hover:translate-y-[-7px] hover:scale-[1.03] hover:shadow-xl border-white/10 hover:z-20"
+                                }`}
+                              >
+                                {/* Layered pages under the cover */}
+                                <div className="absolute top-[4px] bottom-[4px] right-[-3px] w-[5px] bg-[#fbf9f5] dark:bg-stone-850 border-y border-r border-stone-300 dark:border-stone-750 rounded-r z-0 shadow-sm transition-transform duration-300 group-hover:translate-x-[2px] pointer-events-none" />
+                                <div className="absolute top-[8px] bottom-[8px] right-[-5px] w-[3px] bg-[#f5f1ea] dark:bg-stone-900 border-y border-r border-stone-200 dark:border-stone-800 rounded-r z-0 transition-transform duration-300 group-hover:translate-x-[3px] pointer-events-none opacity-80" />
+
+                                {/* Full-screen illustration image */}
+                                <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden pointer-events-none">
+                                  <img
+                                    src={adv.image}
+                                    alt={advTitle}
+                                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-105 contrast-[1.02] saturate-[1.04]"
+                                    referrerPolicy="no-referrer"
+                                    loading="lazy"
+                                  />
+                                  {/* Vignette overlay */}
+                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_15%,rgba(0,0,0,0.45)_100%)] opacity-70 pointer-events-none" />
+                                  {/* Soft transparent-to-black bottom gradient */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+                                </div>
+
+                                {/* Spine effects */}
+                                <div className="absolute left-0 top-0 bottom-0 w-[15px] bg-gradient-to-r from-black/30 via-black/10 to-transparent rounded-l-2xl z-20 pointer-events-none border-r border-white/5" />
+                                <div className="absolute left-[15px] top-0 bottom-0 w-[1px] bg-black/20 dark:bg-white/5 z-20 pointer-events-none" />
+                                <div className="absolute left-[16px] top-0 bottom-0 w-[1px] bg-white/10 dark:bg-black/25 z-20 pointer-events-none" />
+
+                                {/* Selected border indicator */}
+                                {isSelected && (
+                                  <div className="absolute inset-0 border-[2px] border-emerald-400 rounded-2xl z-30 pointer-events-none animate-pulse" />
+                                )}
+
+                                {/* Silk Ribbon Bookmark */}
+                                {isSelected && (
+                                  <div className="absolute top-[-8px] left-5 w-3.5 h-14 bg-rose-600 dark:bg-rose-500 rounded-b shadow-lg z-30 pointer-events-none origin-top animate-bounce-subtle">
+                                    <div className="absolute bottom-1 left-0 right-0 h-1.5 bg-black/15 rounded-b-sm" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-0 w-0 border-l-[7px] border-r-[7px] border-b-[7px] border-b-transparent border-l-rose-600 border-r-rose-600 dark:border-l-rose-500 dark:border-r-rose-500" />
+                                  </div>
+                                )}
+
+                                {/* Card content */}
+                                <div className="relative z-10 flex flex-col justify-between h-full w-full pointer-events-none">
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="p-1.5 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-xl border border-white/20 shadow-md">
+                                      <Icon className="h-3.5 w-3.5 text-white drop-shadow" />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {isSelected ? (
+                                        <span className="px-2 py-0.5 bg-emerald-500 text-white text-[7.5px] font-black rounded-full uppercase tracking-wider shadow-[0_4px_10px_rgba(16,185,129,0.3)] flex items-center gap-0.5">
+                                          <span className="text-[8px]">✓</span> {lang === 'es' ? 'Viaje' : "Journey"}
+                                        </span>
+                                      ) : (
+                                        <span className="px-2 py-0.5 bg-white/15 dark:bg-black/30 backdrop-blur-md border border-white/10 text-[7.5px] font-black text-white rounded-full uppercase tracking-widest shadow-sm">
+                                          {advTag}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-1.5 pt-12">
+                                    <h4 className="text-xs sm:text-sm font-black text-white font-display tracking-tight leading-snug line-clamp-2 uppercase [text-shadow:0_1.5px_3px_rgba(0,0,0,0.6)]">
+                                      {advTitle}
+                                    </h4>
+                                    <p className="text-[9.5px] text-gray-200/90 font-medium leading-relaxed italic line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                                      "{BOOK_SUBTITLES[adv.id]?.[lang] || BOOK_SUBTITLES[adv.id]?.en}"
+                                    </p>
+                                    <div className="pt-2 border-t border-white/15 flex items-center justify-between text-[7.5px] text-gray-200 font-bold uppercase tracking-widest">
+                                      <span>🕒 8 min</span>
+                                      <span className="truncate max-w-[80px]">🎯 {adv.goalLabel[lang] || adv.goalLabel.en}</span>
+                                      <span>👶 Age 4–6</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {/* Shelf ledge */}
+                        <div className="h-4 w-full bg-gradient-to-r from-amber-900/25 via-amber-800/35 to-amber-900/25 dark:from-[#2a1f18] dark:via-[#362a20] dark:to-[#2a1f18] rounded-md shadow border-t border-amber-800/20" />
+                      </div>
+                    </div>
+
+                    {/* Row 2 (Books 3, 4, 5) */}
+                    <div className="relative w-full py-8 px-6 rounded-[28px] bg-[#fdfaf5] dark:bg-stone-900/40 border border-[#f0e6d2] dark:border-stone-850 shadow-premium-sm overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9] to-[#f4eee0]/45 dark:from-stone-950/10 dark:to-stone-900/5 pointer-events-none" />
+                      <div className="relative z-10">
+                        <div className="w-full flex items-end justify-around gap-6 min-h-[380px] pb-3">
+                          {STORYBOOK_ADVENTURES.slice(3, 6).map((adv, idx) => {
+                            const isSelected = selectedAdventureId === adv.id;
+                            const Icon = adv.icon;
+                            const advTitle = adv.title[lang] || adv.title.en;
+                            const advTag = adv.tag[lang] || adv.tag.en;
+                            const bookColor = BOOK_DECOR[adv.id] || BOOK_DECOR.forest;
+                            const heightOffset = bookColor.heightOffset;
+                            const calculatedHeight = 315 + heightOffset;
+
+                            return (
+                              <div
+                                key={`tablet-r2-${adv.id}`}
+                                onClick={() => {
+                                  setSelectedAdventureId(adv.id);
+                                  logEvent("success", `Selected Storybook Journey: ${advTitle}`);
+                                }}
+                                style={{ height: `${calculatedHeight}px` }}
+                                className={`group relative w-[185px] transition-all duration-300 ease-out cursor-pointer z-10 select-none rounded-2xl overflow-visible flex flex-col justify-between p-4.5 border ${
+                                  isSelected
+                                    ? `translate-y-[-14px] scale-[1.03] ${bookColor.glow} border-emerald-400/80 ring-2 ring-emerald-400/20 z-30`
+                                    : "hover:translate-y-[-7px] hover:scale-[1.03] hover:shadow-xl border-white/10 hover:z-20"
+                                }`}
+                              >
+                                {/* Layered pages under the cover */}
+                                <div className="absolute top-[4px] bottom-[4px] right-[-3px] w-[5px] bg-[#fbf9f5] dark:bg-stone-850 border-y border-r border-stone-300 dark:border-stone-750 rounded-r z-0 shadow-sm transition-transform duration-300 group-hover:translate-x-[2px] pointer-events-none" />
+                                <div className="absolute top-[8px] bottom-[8px] right-[-5px] w-[3px] bg-[#f5f1ea] dark:bg-stone-900 border-y border-r border-stone-200 dark:border-stone-800 rounded-r z-0 transition-transform duration-300 group-hover:translate-x-[3px] pointer-events-none opacity-80" />
+
+                                {/* Full-screen illustration image */}
+                                <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden pointer-events-none">
+                                  <img
+                                    src={adv.image}
+                                    alt={advTitle}
+                                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-105 contrast-[1.02] saturate-[1.04]"
+                                    referrerPolicy="no-referrer"
+                                    loading="lazy"
+                                  />
+                                  {/* Vignette overlay */}
+                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_15%,rgba(0,0,0,0.45)_100%)] opacity-70 pointer-events-none" />
+                                  {/* Soft transparent-to-black bottom gradient */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+                                </div>
+
+                                {/* Spine effects */}
+                                <div className="absolute left-0 top-0 bottom-0 w-[15px] bg-gradient-to-r from-black/30 via-black/10 to-transparent rounded-l-2xl z-20 pointer-events-none border-r border-white/5" />
+                                <div className="absolute left-[15px] top-0 bottom-0 w-[1px] bg-black/20 dark:bg-white/5 z-20 pointer-events-none" />
+                                <div className="absolute left-[16px] top-0 bottom-0 w-[1px] bg-white/10 dark:bg-black/25 z-20 pointer-events-none" />
+
+                                {/* Selected border indicator */}
+                                {isSelected && (
+                                  <div className="absolute inset-0 border-[2px] border-emerald-400 rounded-2xl z-30 pointer-events-none animate-pulse" />
+                                )}
+
+                                {/* Silk Ribbon Bookmark */}
+                                {isSelected && (
+                                  <div className="absolute top-[-8px] left-5 w-3.5 h-14 bg-rose-600 dark:bg-rose-500 rounded-b shadow-lg z-30 pointer-events-none origin-top animate-bounce-subtle">
+                                    <div className="absolute bottom-1 left-0 right-0 h-1.5 bg-black/15 rounded-b-sm" />
+                                    <div className="absolute bottom-0 left-0 right-0 h-0 w-0 border-l-[7px] border-r-[7px] border-b-[7px] border-b-transparent border-l-rose-600 border-r-rose-600 dark:border-l-rose-500 dark:border-r-rose-500" />
+                                  </div>
+                                )}
+
+                                {/* Card content */}
+                                <div className="relative z-10 flex flex-col justify-between h-full w-full pointer-events-none">
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="p-1.5 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-xl border border-white/20 shadow-md">
+                                      <Icon className="h-3.5 w-3.5 text-white drop-shadow" />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {isSelected ? (
+                                        <span className="px-2 py-0.5 bg-emerald-500 text-white text-[7.5px] font-black rounded-full uppercase tracking-wider shadow-[0_4px_10px_rgba(16,185,129,0.3)] flex items-center gap-0.5">
+                                          <span className="text-[8px]">✓</span> {lang === 'es' ? 'Viaje' : "Journey"}
+                                        </span>
+                                      ) : (
+                                        <span className="px-2 py-0.5 bg-white/15 dark:bg-black/30 backdrop-blur-md border border-white/10 text-[7.5px] font-black text-white rounded-full uppercase tracking-widest shadow-sm">
+                                          {advTag}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-1.5 pt-12">
+                                    <h4 className="text-xs sm:text-sm font-black text-white font-display tracking-tight leading-snug line-clamp-2 uppercase [text-shadow:0_1.5px_3px_rgba(0,0,0,0.6)]">
+                                      {advTitle}
+                                    </h4>
+                                    <p className="text-[9.5px] text-gray-200/90 font-medium leading-relaxed italic line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                                      "{BOOK_SUBTITLES[adv.id]?.[lang] || BOOK_SUBTITLES[adv.id]?.en}"
+                                    </p>
+                                    <div className="pt-2 border-t border-white/15 flex items-center justify-between text-[7.5px] text-gray-200 font-bold uppercase tracking-widest">
+                                      <span>🕒 8 min</span>
+                                      <span className="truncate max-w-[80px]">🎯 {adv.goalLabel[lang] || adv.goalLabel.en}</span>
+                                      <span>👶 Age 4–6</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {/* Shelf ledge */}
+                        <div className="h-4 w-full bg-gradient-to-r from-amber-900/25 via-amber-800/35 to-amber-900/25 dark:from-[#2a1f18] dark:via-[#362a20] dark:to-[#2a1f18] rounded-md shadow border-t border-amber-800/20" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile Layout: Horizontal Swipeable Carousel sitting on its own shelf */}
+                  <div className="block md:hidden relative w-full py-8 px-4 bg-[#fdfaf5] dark:bg-[#121110]/30 border border-[#f0e6d2] dark:border-stone-850/60 rounded-[28px] overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9] to-[#f4eee0]/30 pointer-events-none" />
+                    
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="w-full flex overflow-x-auto snap-x snap-mandatory gap-5 pb-3 scrollbar-none items-end min-h-[350px]">
+                        {STORYBOOK_ADVENTURES.map((adv, idx) => {
+                          const isSelected = selectedAdventureId === adv.id;
+                          const Icon = adv.icon;
+                          const advTitle = adv.title[lang] || adv.title.en;
+                          const advTag = adv.tag[lang] || adv.tag.en;
+                          const bookColor = BOOK_DECOR[adv.id] || BOOK_DECOR.forest;
+                          const heightOffset = bookColor.heightOffset / 1.5; // smaller height variance for mobile carousel
+                          const calculatedHeight = 300 + heightOffset;
+
+                          return (
+                            <div
+                              key={`mobile-${adv.id}`}
+                              onClick={() => {
+                                setSelectedAdventureId(adv.id);
+                                logEvent("success", `Selected Storybook Journey: ${advTitle}`);
+                              }}
+                              style={{ height: `${calculatedHeight}px` }}
+                              className={`snap-center shrink-0 w-[180px] relative transition-all duration-300 ease-out cursor-pointer z-10 select-none rounded-2xl overflow-visible flex flex-col justify-between p-4 border ${
+                                isSelected
+                                  ? `scale-[1.03] ${bookColor.glow} border-emerald-400/80 ring-2 ring-emerald-400/20 z-30`
+                                  : "border-white/10"
+                              }`}
+                            >
+                              {/* Page edges */}
+                              <div className="absolute top-[3px] bottom-[3px] right-[-3px] w-[4px] bg-[#fbf9f5] dark:bg-stone-850 border-y border-r border-stone-300 dark:border-stone-750 rounded-r z-0 shadow-sm pointer-events-none" />
+                              
+                              {/* Full-screen illustration image */}
+                              <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden pointer-events-none">
+                                <img
+                                  src={adv.image}
+                                  alt={advTitle}
+                                  className="w-full h-full object-cover contrast-[1.02] saturate-[1.04]"
+                                  referrerPolicy="no-referrer"
+                                  loading="lazy"
+                                />
+                                {/* Vignette overlay */}
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_15%,rgba(0,0,0,0.45)_100%)] opacity-70 pointer-events-none" />
+                                {/* Soft bottom gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+                              </div>
+
+                              {/* Spine effects */}
+                              <div className="absolute left-0 top-0 bottom-0 w-[12px] bg-gradient-to-r from-black/30 via-black/10 to-transparent rounded-l-2xl z-20 pointer-events-none border-r border-white/5" />
+                              <div className="absolute left-[12px] top-0 bottom-0 w-[1px] bg-black/20 dark:bg-white/5 z-20 pointer-events-none" />
+
+                              {/* Selected indicator */}
+                              {isSelected && (
+                                <div className="absolute inset-0 border-[2px] border-emerald-400 rounded-2xl z-30 pointer-events-none animate-pulse" />
+                              )}
+
+                              {/* Silk Ribbon Bookmark */}
+                              {isSelected && (
+                                <div className="absolute top-[-6px] left-4 w-3 h-12 bg-rose-600 dark:bg-rose-500 rounded-b shadow-lg z-30 pointer-events-none origin-top animate-bounce-subtle">
+                                  <div className="absolute bottom-0.5 left-0 right-0 h-1 bg-black/15 rounded-b-sm" />
+                                  <div className="absolute bottom-0 left-0 right-0 h-0 w-0 border-l-[6px] border-r-[6px] border-b-[6px] border-b-transparent border-l-rose-600 border-r-rose-600 dark:border-l-rose-500 dark:border-r-rose-500" />
+                                </div>
+                              )}
+
+                              {/* Card content */}
+                              <div className="relative z-10 flex flex-col justify-between h-full w-full pointer-events-none">
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="p-1.5 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-xl border border-white/20 shadow-md">
+                                    <Icon className="h-3.5 w-3.5 text-white drop-shadow" />
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {isSelected ? (
+                                      <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[7px] font-black rounded-full uppercase tracking-wider shadow-[0_3px_8px_rgba(16,185,129,0.3)] flex items-center gap-0.5">
+                                        <span className="text-[7.5px]">✓</span> {lang === 'es' ? 'Viaje' : "Journey"}
+                                      </span>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 bg-white/15 dark:bg-black/30 backdrop-blur-md border border-white/10 text-[7px] font-black text-white rounded-full uppercase tracking-widest shadow-sm">
+                                        {advTag}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1 pt-12">
+                                  <h4 className="text-xs font-black text-white font-display tracking-tight leading-tight line-clamp-2 uppercase [text-shadow:0_1.5px_3px_rgba(0,0,0,0.6)]">
+                                    {advTitle}
+                                  </h4>
+                                  <p className="text-[9px] text-gray-200/90 font-medium leading-relaxed italic line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                                    "{BOOK_SUBTITLES[adv.id]?.[lang] || BOOK_SUBTITLES[adv.id]?.en}"
+                                  </p>
+                                  <div className="pt-1.5 border-t border-white/15 flex items-center justify-between text-[7px] text-gray-200 font-bold uppercase tracking-widest">
+                                    <span>🕒 8 min</span>
+                                    <span className="truncate max-w-[65px]">🎯 {adv.goalLabel[lang] || adv.goalLabel.en}</span>
+                                    <span>👶 Age 4–6</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Mobile Shelf ledge */}
+                      <div className="w-full relative z-20 mt-[-4px]">
+                        <div className="h-[4px] w-full bg-gradient-to-r from-amber-900/25 via-amber-800/35 to-amber-900/25 dark:from-[#2a1f18] dark:via-[#362a20] dark:to-[#2a1f18] rounded-md shadow border-t border-amber-800/20" />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
                 {/* Today's Guided Therapy Session Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
@@ -2057,34 +2648,53 @@ export default function App() {
                   transition={{ delay: 0.1 }}
                   className={`p-6 sm:p-8 rounded-[32px] border ${cardBgClass} shadow-premium-lg relative overflow-hidden flex flex-col md:flex-row gap-8 items-stretch`}
                 >
-                  {/* Visual gradient background */}
-                  <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
-                  <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-[#00828A]/10 blur-3xl pointer-events-none" />
+                  {/* Visual gradient background based on selected adventure */}
+                  {(() => {
+                    const meta = ADVENTURE_METADATA[selectedAdventureId] || ADVENTURE_METADATA.forest;
+                    return (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${meta.bgGradient} opacity-40 blur-3xl pointer-events-none`} />
+                    );
+                  })()}
 
                   {/* Left Side: Goal, Estimated Time, Difficulty, Start Button */}
                   <div className="flex-1 flex flex-col justify-between space-y-6 relative z-10">
-                    <div className="space-y-2 text-left">
-                      <span className="px-3 py-1 bg-[#00828A]/10 text-[#00828A] dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-wider">
-                        Today's Guided Therapy Session
-                      </span>
-                    </div>
+                    {(() => {
+                      const meta = ADVENTURE_METADATA[selectedAdventureId] || ADVENTURE_METADATA.forest;
+                      const advTitle = currentAdventure.title[lang] || currentAdventure.title.en;
+                      return (
+                        <>
+                          <div className="space-y-2 text-left">
+                            <span className="px-3 py-1 bg-[#00828A]/10 text-[#00828A] dark:text-teal-400 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit">
+                              <span>{meta.emoji}</span> Today's Journey: {advTitle}
+                            </span>
+                          </div>
 
-                    <div className="space-y-4 text-left">
-                      <p className={`text-lg md:text-xl font-extrabold ${textPrimaryClass} leading-snug`}>
-                        Goal: Help {childName} ask for favorite toys using two-word phrases.
-                      </p>
+                          <div className="space-y-4 text-left">
+                            <h3 className={`text-xl sm:text-2xl font-black font-display tracking-tight ${textPrimaryClass}`}>
+                              {advTitle}
+                            </h3>
+                            <p className={`text-sm font-semibold ${textPrimaryClass} leading-snug`}>
+                              <strong>Goal:</strong> {activeChild?.weeklyGoal || "Improve Communication"}
+                            </p>
 
-                      <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-[#00828A]" />
-                          Estimated Time: {activeChild?.preferredSessionDuration || "8 Minutes"}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-4 w-4 text-rose-500" />
-                          Difficulty: Gentle / Warm
-                        </span>
-                      </div>
-                    </div>
+                            <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-4 w-4 text-[#00828A]" />
+                                Estimated Time: {activeChild?.preferredSessionDuration || "8 Minutes"}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <BookOpen className="h-4 w-4 text-blue-500" />
+                                Story Theme: {meta.storyTheme}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Heart className="h-4 w-4 text-rose-500" />
+                                Difficulty: Gentle / Warm
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
 
                     <div className="text-left pt-2">
                       <button
@@ -2960,7 +3570,7 @@ export default function App() {
                         <h4 className={`text-sm font-extrabold ${textPrimaryClass}`}>
                           Connected Clinic
                         </h4>
-                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">HIPAA SECURE</p>
+                        <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">PRIVACY FIRST</p>
                       </div>
                     </div>
 

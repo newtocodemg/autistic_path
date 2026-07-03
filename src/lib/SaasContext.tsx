@@ -118,7 +118,7 @@ interface SaasContextType {
   setDarkMode: (dark: boolean) => void;
   updateNotificationsConfig: (config: Record<string, boolean>) => Promise<void>;
   deleteUserAccount: () => Promise<void>;
-  resetDemoData: () => void;
+  resetApplicationData: () => void;
 }
 
 const SaasContext = createContext<SaasContextType | undefined>(undefined);
@@ -131,15 +131,15 @@ const DEFAULT_NOTIFICATIONS = {
   newStory: true
 };
 
-const DEMO_USER: User = {
-  uid: "demo-user-123",
-  email: "demo@autisticpath.com",
+const ACTIVE_USER: User = {
+  uid: "parent-user-789",
+  email: "parent@autisticpath.com",
   displayName: "Sarah"
 };
 
 export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children: reactChildren }) => {
   // Constant mock user to bypass all auth screen logic
-  const [user] = useState<User | null>(DEMO_USER);
+  const [user] = useState<User | null>(ACTIVE_USER);
   const [loading, setLoading] = useState(true);
   
   // Localized states
@@ -192,65 +192,55 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cachedReadingHistory = localStorage.getItem("demo_reading_history");
     const cachedNotifications = localStorage.getItem("demo_notifications_config");
 
-    let loadedParent: ParentProfile;
+    let loadedParent: ParentProfile | null = null;
     if (cachedParent) {
       loadedParent = JSON.parse(cachedParent);
+      setParentState(loadedParent);
     } else {
-      loadedParent = MOCK_PARENT;
-      localStorage.setItem("demo_parent", JSON.stringify(MOCK_PARENT));
+      setParentState(null);
     }
-    setParentState(loadedParent);
 
-    let loadedChildren: ChildProfile[];
+    let loadedChildren: ChildProfile[] = [];
     if (cachedChildren) {
       loadedChildren = JSON.parse(cachedChildren);
+      setChildrenList(loadedChildren);
     } else {
-      // Setup default mock child with sessions generated on the fly
-      const childWithNoSessions = { ...MOCK_CHILD };
-      const generatedSessions = generateWeeklyPlan(childWithNoSessions);
-      const childWithSessions: ChildProfile = {
-        ...childWithNoSessions,
-        sessions: generatedSessions
-      };
-      loadedChildren = [childWithSessions];
-      localStorage.setItem("demo_children", JSON.stringify([childWithSessions]));
+      setChildrenList([]);
     }
-    setChildrenList(loadedChildren);
 
-    let loadedActiveId = cachedActiveId || loadedChildren[0]?.id || null;
+    let loadedActiveId = cachedActiveId || (loadedChildren.length > 0 ? loadedChildren[0].id : null);
     setActiveChildId(loadedActiveId);
-    if (!cachedActiveId && loadedActiveId) {
-      localStorage.setItem("demo_active_child_id", loadedActiveId);
-    }
 
-    let loadedLogs: SessionLog[];
+    let loadedLogs: SessionLog[] = [];
     if (cachedLogs) {
       loadedLogs = JSON.parse(cachedLogs);
+      setSessionLogs(loadedLogs);
     } else {
-      loadedLogs = MOCK_SESSION_LOGS;
-      localStorage.setItem("demo_session_logs", JSON.stringify(MOCK_SESSION_LOGS));
+      setSessionLogs([]);
     }
-    setSessionLogs(loadedLogs);
 
-    let loadedMilestones: Milestone[];
+    let loadedMilestones: Milestone[] = [];
     if (cachedMilestones) {
       loadedMilestones = JSON.parse(cachedMilestones);
+      setMilestones(loadedMilestones);
     } else {
-      loadedMilestones = MOCK_MILESTONES;
-      localStorage.setItem("demo_milestones", JSON.stringify(MOCK_MILESTONES));
+      setMilestones([]);
     }
-    setMilestones(loadedMilestones);
 
     if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
     if (cachedReadingHistory) setReadingHistory(JSON.parse(cachedReadingHistory));
     if (cachedNotifications) setNotificationsConfig(JSON.parse(cachedNotifications));
 
     // Load active therapy session
-    const activeChildObj = loadedChildren.find(c => c.id === loadedActiveId) || loadedChildren[0];
-    if (activeChildObj && activeChildObj.sessions) {
-      const completedIds = loadedLogs.map(l => l.sessionId);
-      const incomplete = activeChildObj.sessions.find(s => !completedIds.includes(s.id));
-      setTodaysSession(incomplete || activeChildObj.sessions[0] || null);
+    if (loadedChildren.length > 0) {
+      const activeChildObj = loadedChildren.find(c => c.id === loadedActiveId) || loadedChildren[0];
+      if (activeChildObj && activeChildObj.sessions) {
+        const completedIds = loadedLogs.map(l => l.sessionId);
+        const incomplete = activeChildObj.sessions.find(s => !completedIds.includes(s.id));
+        setTodaysSession(incomplete || activeChildObj.sessions[0] || null);
+      }
+    } else {
+      setTodaysSession(null);
     }
 
     // Attempt to load live community stories from firestore if possible, otherwise rely on MOCK_STORIES
@@ -262,7 +252,7 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCustomStories(storiesList);
         }
       } catch (err) {
-        console.info("[Demo Mode] Firestore stories fetching bypassed. Using high-fidelity local demo stories.");
+        console.info("[Local Mode] Firestore stories fetching bypassed. Using high-fidelity local stories.");
       }
     };
     loadLiveStories();
@@ -275,8 +265,8 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearTimeout(timer);
   }, []);
 
-  // Reset Demo Data helper (extremely useful for parents and investors)
-  const resetDemoData = () => {
+  // Reset Application Data helper
+  const resetApplicationData = () => {
     localStorage.removeItem("demo_parent");
     localStorage.removeItem("demo_children");
     localStorage.removeItem("demo_active_child_id");
@@ -286,27 +276,16 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("demo_reading_history");
     localStorage.removeItem("demo_notifications_config");
 
-    // Re-initialize state
-    setParentState(MOCK_PARENT);
-    const childWithNoSessions = { ...MOCK_CHILD };
-    const generatedSessions = generateWeeklyPlan(childWithNoSessions);
-    const childWithSessions: ChildProfile = {
-      ...childWithNoSessions,
-      sessions: generatedSessions
-    };
-    setChildrenList([childWithSessions]);
-    setActiveChildId(childWithSessions.id);
-    setSessionLogs(MOCK_SESSION_LOGS);
-    setMilestones(MOCK_MILESTONES);
+    // Clear state completely so the app redirects to onboarding flow
+    setParentState(null);
+    setChildrenList([]);
+    setActiveChildId(null);
+    setSessionLogs([]);
+    setMilestones([]);
     setBookmarks([]);
     setReadingHistory([]);
     setNotificationsConfig(DEFAULT_NOTIFICATIONS);
-
-    if (childWithSessions.sessions) {
-      const completedIds = MOCK_SESSION_LOGS.map(l => l.sessionId);
-      const incomplete = childWithSessions.sessions.find(s => !completedIds.includes(s.id));
-      setTodaysSession(incomplete || childWithSessions.sessions[0] || null);
-    }
+    setTodaysSession(null);
   };
 
   // Helper: update child profile directly inside state and localStorage
@@ -340,8 +319,8 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logOut = async () => {
-    // Lock/Sign out resets the demo so a new showcase is clean!
-    resetDemoData();
+    // Lock/Sign out resets the state so a new session is clean!
+    resetApplicationData();
   };
 
   const updateParentProfile = async (data: Partial<ParentProfile>) => {
@@ -570,7 +549,7 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteUserAccount = async () => {
-    resetDemoData();
+    resetApplicationData();
   };
 
   return (
@@ -614,7 +593,7 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDarkMode,
       updateNotificationsConfig,
       deleteUserAccount,
-      resetDemoData
+      resetApplicationData
     }}>
       {reactChildren}
     </SaasContext.Provider>
