@@ -8,6 +8,7 @@ import {
   GoogleAuthProvider, 
   signInWithPopup,
   onAuthStateChanged,
+  signInAnonymously,
   User
 } from "firebase/auth";
 import { 
@@ -49,6 +50,7 @@ export {
   GoogleAuthProvider, 
   signInWithPopup,
   onAuthStateChanged,
+  signInAnonymously,
   doc,
   setDoc,
   getDoc,

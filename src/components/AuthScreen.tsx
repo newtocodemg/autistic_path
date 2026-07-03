@@ -20,7 +20,8 @@ import {
   createUserWithEmailAndPassword, 
   sendPasswordResetEmail, 
   signInWithPopup, 
-  GoogleAuthProvider 
+  GoogleAuthProvider,
+  signInAnonymously
 } from "../lib/firebase";
 import { 
   getFriendlyAuthErrorMessage, 
@@ -131,6 +132,38 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         const errMsg = getFriendlyAuthErrorMessage(err, "google");
         setError(errMsg);
         logEvent("warning", `Google sign in failed: ${errMsg}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnonymousSignIn = async () => {
+    setError(null);
+    setSuccessMsg(null);
+
+    // Pre-flight check: is anonymous provider enabled?
+    if (!isAuthProviderEnabled("anonymous")) {
+      if (onSkip) onSkip();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const userCredential = await signInAnonymously(auth);
+      logEvent("success", "Signed in anonymously with Firebase.");
+      onAuthSuccess(userCredential.user);
+    } catch (err: any) {
+      logAuthErrorInDev(err);
+      const errMsg = getFriendlyAuthErrorMessage(err, "anonymous");
+      setError(errMsg);
+      logEvent("warning", `Anonymous auth fallback: ${errMsg}`);
+      
+      // Fallback to offline local sandbox mode so application doesn't crash
+      if (onSkip) {
+        setTimeout(() => {
+          onSkip();
+        }, 1500);
       }
     } finally {
       setLoading(false);
@@ -367,7 +400,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         {onSkip && (
           <div className="text-center mt-4">
             <button
-              onClick={onSkip}
+              onClick={handleAnonymousSignIn}
               className="text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 underline cursor-pointer transition-colors"
             >
               Continue as Guest (Offline Mode)
