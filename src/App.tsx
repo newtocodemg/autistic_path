@@ -1298,7 +1298,15 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [prevScrollY]);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isSignedIn, setIsSignedIn] = useState(true);
+  const isSignedIn = !!user;
+  const handleCompleteSignOut = async () => {
+    if (user) {
+      await logOut();
+    }
+    setIsGuest(false);
+    setIsAuthenticated(true);
+    logEvent("info", "Successfully signed out of workspace.");
+  };
   const [searchQuery, setSearchQuery] = useState("");
   
   // Interactive Today's Mission Adventure State
@@ -1723,8 +1731,8 @@ export default function App() {
               /* A. Sign In Button when user is not signed in */
               <button
                 onClick={() => {
-                  setIsSignedIn(true);
-                  logEvent("success", "User signed in successfully.");
+                  setIsGuest(false);
+                  setIsAuthenticated(true);
                 }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shadow-sm ${
                   theme === "light"
@@ -1970,8 +1978,7 @@ export default function App() {
 
                             <button
                               onClick={() => {
-                                setIsSignedIn(false);
-                                handleLockWorkspace();
+                                handleCompleteSignOut();
                                 setProfileDropdownOpen(false);
                               }}
                               className="w-full text-center py-2 px-3 rounded-lg bg-rose-500 hover:bg-rose-600 text-white font-bold transition-all cursor-pointer text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 mt-1"
@@ -2115,8 +2122,7 @@ export default function App() {
               {/* iOS Sign Out Button */}
               <button
                 onClick={() => {
-                  setIsSignedIn(false);
-                  handleLockWorkspace();
+                  handleCompleteSignOut();
                   setMobileMenuOpen(false);
                 }}
                 className="w-full text-center py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-extrabold transition-all cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2"

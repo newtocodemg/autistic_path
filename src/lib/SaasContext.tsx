@@ -85,7 +85,7 @@ interface SaasContextType {
   logOut: () => Promise<void>;
   updateParentProfile: (data: Partial<ParentProfile>) => Promise<void>;
   updateChildProfile: (childId: string, data: Partial<ChildProfile>) => Promise<void>;
-  addChild: (childData: Omit<ChildProfile, "id" | "sessions" | "completedSessions">) => Promise<void>;
+  addChild: (childData: Omit<ChildProfile, "id" | "sessions" | "completedSessions" | "progressScore" | "completedAdventuresCount">) => Promise<void>;
   deleteChild: (childId: string) => Promise<void>;
   
   // Today's Session Engine
@@ -207,6 +207,14 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setReadingHistory(userData.readingHistory || []);
         setNotificationsConfig(userData.notificationsConfig || DEFAULT_NOTIFICATIONS);
         
+        // Save local copies to localStorage as offline fallbacks
+        localStorage.setItem(`saas_parent_${currentUser.uid}`, JSON.stringify(userData.parent || null));
+        localStorage.setItem(`saas_children_${currentUser.uid}`, JSON.stringify(userData.children || []));
+        localStorage.setItem(`saas_activeChildId_${currentUser.uid}`, userData.activeChildId || "");
+        localStorage.setItem(`saas_bookmarks_${currentUser.uid}`, JSON.stringify(userData.bookmarks || []));
+        localStorage.setItem(`saas_readingHistory_${currentUser.uid}`, JSON.stringify(userData.readingHistory || []));
+        localStorage.setItem(`saas_notificationsConfig_${currentUser.uid}`, JSON.stringify(userData.notificationsConfig || DEFAULT_NOTIFICATIONS));
+
         // Load sessions, logs, milestones
         await loadSubcollections(currentUser.uid, userData.children || []);
       } else {
@@ -231,7 +239,12 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: new Date().toISOString()
           };
 
-          await setDoc(userDocRef, initialData);
+          try {
+            await setDoc(userDocRef, initialData);
+          } catch (setErr) {
+            console.warn("Failed to set initial user document online, continuing in offline sandbox mode:", setErr);
+          }
+          
           setParent(parsedParent);
           setChildrenList(parsedChildren);
           setActiveChildId(activeId);
@@ -242,7 +255,42 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Load global stories
       await fetchGlobalStories();
     } catch (err) {
-      console.error("Error loading secure SaaS data: ", err);
+      console.warn("Offline or failed loading secure online SaaS data. Restoring offline local fallback copy:", err);
+      
+      // Fallback from localStorage copies
+      const cachedParent = localStorage.getItem(`saas_parent_${currentUser.uid}`);
+      const cachedChildren = localStorage.getItem(`saas_children_${currentUser.uid}`);
+      const cachedActiveId = localStorage.getItem(`saas_activeChildId_${currentUser.uid}`);
+      const cachedBookmarks = localStorage.getItem(`saas_bookmarks_${currentUser.uid}`);
+      const cachedReadingHistory = localStorage.getItem(`saas_readingHistory_${currentUser.uid}`);
+      const cachedNotificationsConfig = localStorage.getItem(`saas_notificationsConfig_${currentUser.uid}`);
+
+      if (cachedParent && cachedChildren) {
+        setParent(JSON.parse(cachedParent));
+        const parsedChildren = JSON.parse(cachedChildren);
+        setChildrenList(parsedChildren);
+        const activeId = cachedActiveId || parsedChildren[0]?.id || null;
+        setActiveChildId(activeId);
+        
+        if (cachedBookmarks) setBookmarks(JSON.parse(cachedBookmarks));
+        if (cachedReadingHistory) setReadingHistory(JSON.parse(cachedReadingHistory));
+        if (cachedNotificationsConfig) setNotificationsConfig(JSON.parse(cachedNotificationsConfig));
+
+        // Restore subcollections fallback
+        const cachedLogs = localStorage.getItem(`saas_logs_${currentUser.uid}`);
+        const cachedMilestones = localStorage.getItem(`saas_milestones_${currentUser.uid}`);
+        const logsList = cachedLogs ? JSON.parse(cachedLogs) : [];
+        setSessionLogs(logsList);
+        if (cachedMilestones) setMilestones(JSON.parse(cachedMilestones));
+
+        // Resolve active session
+        const activeChildObj = parsedChildren.find((c: any) => c.id === activeId) || parsedChildren[0];
+        if (activeChildObj) {
+          const completedIds = logsList.map((l: any) => l.sessionId);
+          const incomplete = activeChildObj.sessions?.find((s: any) => !completedIds.includes(s.id));
+          setTodaysSession(incomplete || activeChildObj.sessions?.[0] || null);
+        }
+      }
     }
   };
 
@@ -253,11 +301,13 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const logsSnap = await getDocs(collection(db, "users", userId, "logs"));
       const logsList = logsSnap.docs.map(d => ({ id: d.id, ...d.data() } as SessionLog));
       setSessionLogs(logsList);
+      localStorage.setItem(`saas_logs_${userId}`, JSON.stringify(logsList));
 
       // 2. Milestones
       const milestonesSnap = await getDocs(collection(db, "users", userId, "milestones"));
       const mList = milestonesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Milestone));
       setMilestones(mList);
+      localStorage.setItem(`saas_milestones_${userId}`, JSON.stringify(mList));
 
       // 3. Resolve active session from child's generated sessions
       const activeChildObj = currentChildren.find(c => c.id === activeChildId) || currentChildren[0];
@@ -276,7 +326,20 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTodaysSession(incomplete || activeChildObj.sessions[0] || null);
       }
     } catch (err) {
-      console.error("Error fetching secure logs/milestones: ", err);
+      console.warn("Failed fetching logs/milestones, loading offline fallback copy:", err);
+      const cachedLogs = localStorage.getItem(`saas_logs_${userId}`);
+      const cachedMilestones = localStorage.getItem(`saas_milestones_${userId}`);
+      
+      const logsList = cachedLogs ? JSON.parse(cachedLogs) : [];
+      setSessionLogs(logsList);
+      if (cachedMilestones) setMilestones(JSON.parse(cachedMilestones));
+
+      const activeChildObj = currentChildren.find(c => c.id === activeChildId) || currentChildren[0];
+      if (activeChildObj) {
+        const completedIds = logsList.map((l: any) => l.sessionId);
+        const incomplete = activeChildObj.sessions?.find(s => !completedIds.includes(s.id));
+        setTodaysSession(incomplete || activeChildObj.sessions?.[0] || null);
+      }
     }
   };
 
@@ -290,7 +353,12 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setChildrenList(updatedList);
     const userDocRef = doc(db, "users", userId);
-    await updateDoc(userDocRef, { children: updatedList });
+    try {
+      await updateDoc(userDocRef, { children: updatedList });
+    } catch (err) {
+      console.warn("Could not save child profile updates to server (offline), saved locally:", err);
+    }
+    localStorage.setItem(`saas_children_${userId}`, JSON.stringify(updatedList));
   };
 
   // Fetch Global Shared Stories
@@ -299,8 +367,11 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storiesSnap = await getDocs(collection(db, "stories"));
       const storiesList = storiesSnap.docs.map(d => ({ id: d.id, ...d.data() } as SharedStory));
       setCustomStories(storiesList);
+      localStorage.setItem("saas_global_stories", JSON.stringify(storiesList));
     } catch (err) {
-      console.error("Error loading public stories: ", err);
+      console.warn("Could not load public stories from server (offline), reading cached stories:", err);
+      const cachedStories = localStorage.getItem("saas_global_stories");
+      if (cachedStories) setCustomStories(JSON.parse(cachedStories));
     }
   };
 
@@ -326,7 +397,7 @@ export const SaasProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await updateChildInList(user.uid, childId, data, childrenList);
   };
 
-  const addChild = async (childData: Omit<ChildProfile, "id" | "sessions" | "completedSessions">) => {
+  const addChild = async (childData: Omit<ChildProfile, "id" | "sessions" | "completedSessions" | "progressScore" | "completedAdventuresCount">) => {
     if (!user) return;
     const childId = "child-" + Math.random().toString(36).substring(2, 9);
     const newChild: ChildProfile = {

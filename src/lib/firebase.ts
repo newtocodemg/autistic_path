@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { 
   getFirestore, 
+  enableIndexedDbPersistence,
   doc, 
   setDoc, 
   getDoc, 
@@ -23,8 +24,7 @@ import {
   where, 
   deleteDoc,
   orderBy,
-  limit,
-  setIndexConfiguration
+  limit
 } from "firebase/firestore";
 
 // Config from firebase-applet-config.json
@@ -41,6 +41,13 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Enable Firestore persistent offline cache
+if (typeof window !== "undefined") {
+  enableIndexedDbPersistence(db).catch((err) => {
+    console.warn("Firestore offline persistence enablement warning:", err.message);
+  });
+}
 
 export { 
   signInWithEmailAndPassword, 
