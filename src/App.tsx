@@ -2646,7 +2646,7 @@ export default function App() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className={`p-6 sm:p-8 rounded-[32px] border ${cardBgClass} shadow-premium-lg relative overflow-hidden flex flex-col md:flex-row gap-8 items-stretch`}
+                  className={`p-6 sm:p-8 rounded-[32px] border ${cardBgClass} shadow-premium-lg relative overflow-hidden flex flex-col-reverse md:flex-row gap-8 items-center md:items-stretch`}
                 >
                   {/* Visual gradient background based on selected adventure */}
                   {(() => {
@@ -2657,7 +2657,7 @@ export default function App() {
                   })()}
 
                   {/* Left Side: Goal, Estimated Time, Difficulty, Start Button */}
-                  <div className="flex-1 flex flex-col justify-between space-y-6 relative z-10">
+                  <div className="flex-1 flex flex-col justify-between space-y-6 relative z-10 w-full">
                     {(() => {
                       const meta = ADVENTURE_METADATA[selectedAdventureId] || ADVENTURE_METADATA.forest;
                       const advTitle = currentAdventure.title[lang] || currentAdventure.title.en;
@@ -2713,25 +2713,132 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Right side: Onboarding based summary checklist */}
-                  <div className={`md:w-80 rounded-[24px] border ${theme === 'light' ? 'bg-gray-50/50 border-gray-150' : 'bg-gray-950/40 border-gray-800/40'} p-6 flex flex-col justify-center space-y-4 relative z-10 text-left`}>
-                    <h3 className={`text-xs font-mono font-bold text-gray-400 uppercase tracking-widest`}>
-                      Onboarding Alignment:
-                    </h3>
-                    <div className="space-y-2.5 text-xs font-semibold">
-                      <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
-                        <Check className="h-4 w-4 stroke-[3px]" />
-                        <span className={`${textPrimaryClass}`}>Personalized for {childName}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
-                        <Check className="h-4 w-4 stroke-[3px]" />
-                        <span className={`${textPrimaryClass}`}>Goal: {activeChild?.weeklyGoal || "Improve Communication"}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
-                        <Check className="h-4 w-4 stroke-[3px]" />
-                        <span className={`${textPrimaryClass}`}>Supports communication level: {activeChild?.communicationLevel || "Non-verbal"}</span>
-                      </div>
-                    </div>
+                  {/* Right side: Premium Preview of Selected Storybook */}
+                  <div className="w-full md:w-[350px] flex flex-col items-center justify-center space-y-6 relative z-10">
+                    <motion.div
+                      key={selectedAdventureId}
+                      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      className="w-full flex flex-col items-center"
+                    >
+                      {(() => {
+                        const adv = currentAdventure;
+                        const advTitle = adv.title[lang] || adv.title.en;
+                        const advTag = adv.tag[lang] || adv.tag.en;
+                        const bookColor = BOOK_DECOR[adv.id] || BOOK_DECOR.forest;
+                        const Icon = adv.icon;
+                        const meta = ADVENTURE_METADATA[adv.id] || ADVENTURE_METADATA.forest;
+                        
+                        return (
+                          <div className="w-full flex flex-col items-center space-y-5">
+                            {/* Large Featured Storybook Card (~25% larger than bookshelf card) */}
+                            <div
+                              style={{ width: "235px", height: "390px" }}
+                              className={`relative select-none rounded-[24px] border border-white/15 overflow-visible flex flex-col justify-between p-5.5 ${bookColor.glow} transition-shadow duration-300 shadow-premium-xl`}
+                            >
+                              {/* Layered paper page edges visible on the right under the cover (simulating hardcover book page stack) */}
+                              <div className="absolute top-[6px] bottom-[6px] right-[-5px] w-[6px] bg-[#fbf9f5] dark:bg-stone-850 border-y border-r border-stone-300 dark:border-stone-750 rounded-r z-0 shadow-sm pointer-events-none" />
+                              <div className="absolute top-[10px] bottom-[10px] right-[-9px] w-[5px] bg-[#f5f1ea] dark:bg-stone-900 border-y border-r border-stone-200 dark:border-stone-800 rounded-r z-0 pointer-events-none opacity-80" />
+
+                              {/* Full-screen illustration image */}
+                              <div className="absolute inset-0 z-0 rounded-[24px] overflow-hidden pointer-events-none">
+                                <img
+                                  src={adv.image}
+                                  alt={advTitle}
+                                  className="w-full h-full object-cover contrast-[1.02] saturate-[1.04]"
+                                  referrerPolicy="no-referrer"
+                                  loading="lazy"
+                                />
+                                {/* Vignette overlay */}
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_15%,rgba(0,0,0,0.45)_100%)] opacity-70 pointer-events-none" />
+                                {/* Soft transparent-to-black bottom gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent pointer-events-none" />
+                              </div>
+
+                              {/* Textured spine on the left edge of the front cover */}
+                              <div className="absolute left-0 top-0 bottom-0 w-[18px] bg-gradient-to-r from-black/30 via-black/10 to-transparent rounded-l-[24px] z-20 pointer-events-none border-r border-white/5" />
+                              <div className="absolute left-[18px] top-0 bottom-0 w-[1px] bg-black/20 dark:bg-white/5 z-20 pointer-events-none" />
+                              <div className="absolute left-[19px] top-0 bottom-0 w-[1px] bg-white/10 dark:bg-black/25 z-20 pointer-events-none" />
+
+                              {/* Silk Ribbon Bookmark */}
+                              <div className="absolute top-[-10px] left-7 w-4 h-18 bg-rose-600 dark:bg-rose-500 rounded-b shadow-lg z-30 pointer-events-none origin-top animate-bounce-subtle">
+                                <div className="absolute bottom-1.5 left-0 right-0 h-2 bg-black/15 rounded-b-sm" />
+                                <div className="absolute bottom-0 left-0 right-0 h-0 w-0 border-l-[8px] border-r-[8px] border-b-[8px] border-b-transparent border-l-rose-600 border-r-rose-600 dark:border-l-rose-500 dark:border-r-rose-500" />
+                              </div>
+
+                              {/* Card content */}
+                              <div className="relative z-10 flex flex-col justify-between h-full w-full pointer-events-none">
+                                <div className="flex items-center justify-between w-full">
+                                  {/* Top-left icon with glassmorphism */}
+                                  <div className="p-2.5 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-xl border border-white/20 shadow-md">
+                                    <Icon className="h-4.5 w-4.5 text-white drop-shadow" />
+                                  </div>
+                                  
+                                  {/* Top-right: Emerald badge */}
+                                  <span className="px-3 py-1 bg-emerald-500 text-white text-[8.5px] font-black rounded-full uppercase tracking-wider shadow-[0_4px_12px_rgba(16,185,129,0.35)] flex items-center gap-1">
+                                    <span className="text-[10px]">✓</span> {lang === 'es' ? '📖 Viaje de Hoy' : "📖 Today's Journey"}
+                                  </span>
+                                </div>
+
+                                {/* Bottom Bar: Title, Subtitle, and Meta Row */}
+                                <div className="space-y-2.5 pt-16">
+                                  {/* Title with larger typography and soft shadow */}
+                                  <h4 className="text-sm sm:text-base font-black text-white font-display tracking-tight leading-snug line-clamp-2 uppercase [text-shadow:0_2px_4px_rgba(0,0,0,0.6)]">
+                                    {advTitle}
+                                  </h4>
+
+                                  {/* Subtitle */}
+                                  <p className="text-[10px] text-gray-200/90 font-medium leading-relaxed italic line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                                    "{BOOK_SUBTITLES[adv.id]?.[lang] || BOOK_SUBTITLES[adv.id]?.en}"
+                                  </p>
+
+                                  {/* Bottom meta row */}
+                                  <div className="pt-2.5 border-t border-white/15 flex items-center justify-between text-[8px] text-gray-200 font-bold uppercase tracking-widest">
+                                    <span className="flex items-center gap-1">🕒 8 min</span>
+                                    <span className="flex items-center gap-1 max-w-[100px] truncate">🎯 {adv.goalLabel[lang] || adv.goalLabel.en}</span>
+                                    <span className="flex items-center gap-1">👶 Age 4–6</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Compact pills below the card */}
+                            <div className="flex flex-wrap justify-center gap-2 w-full pt-1">
+                              {/* Pill 1: Goal */}
+                              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${
+                                theme === 'light'
+                                  ? 'bg-amber-50/70 border-amber-100 text-amber-900'
+                                  : 'bg-amber-950/20 border-amber-900/30 text-amber-300'
+                              } max-w-[210px] truncate`}>
+                                <span>🎯</span>
+                                <span className="truncate">{activeChild?.weeklyGoal || (lang === 'es' ? "Mejorar Comunicación" : "Improve Communication")}</span>
+                              </div>
+
+                              {/* Pill 2: Duration */}
+                              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${
+                                theme === 'light'
+                                  ? 'bg-blue-50/70 border-blue-100 text-blue-900'
+                                  : 'bg-blue-950/20 border-blue-900/30 text-blue-300'
+                              }`}>
+                                <span>🕒</span>
+                                <span>{activeChild?.preferredSessionDuration || (lang === 'es' ? "8 Minutos" : "8 Minutes")}</span>
+                              </div>
+
+                              {/* Pill 3: Theme */}
+                              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-extrabold border uppercase tracking-wider ${
+                                theme === 'light'
+                                  ? 'bg-emerald-50/70 border-emerald-100 text-[#00828A]'
+                                  : 'bg-emerald-950/20 border-emerald-900/30 text-teal-300'
+                              }`}>
+                                <span>🌲</span>
+                                <span>{meta.storyTheme}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </motion.div>
                   </div>
                 </motion.div>
 
