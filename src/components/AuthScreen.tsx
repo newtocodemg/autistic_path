@@ -22,6 +22,11 @@ import {
   signInWithPopup, 
   GoogleAuthProvider 
 } from "../lib/firebase";
+import { 
+  getFriendlyAuthErrorMessage, 
+  isAuthProviderEnabled, 
+  logAuthErrorInDev 
+} from "../lib/authErrorHelper";
 
 interface AuthScreenProps {
   theme: "light" | "dark";
@@ -57,6 +62,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
+
+    // Pre-flight check: is password provider enabled?
+    if (!isAuthProviderEnabled("password")) {
+      const errMsg = "Authentication is currently unavailable. Please enable the required sign-in method in Firebase Authentication.";
+      setError(errMsg);
+      logEvent("warning", errMsg);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -83,13 +97,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         setTimeout(() => setMode("login"), 4000);
       }
     } catch (err: any) {
-      console.error(err);
-      let errMsg = err.message || "An error occurred during authentication";
-      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
-        errMsg = "Invalid email or password. Please try again.";
-      } else if (err.code === "auth/email-already-in-use") {
-        errMsg = "This email is already in use.";
-      }
+      logAuthErrorInDev(err);
+      const errMsg = getFriendlyAuthErrorMessage(err, "password");
       setError(errMsg);
       logEvent("warning", `Auth failed: ${errMsg}`);
     } finally {
@@ -100,6 +109,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   const handleGoogleSignIn = async () => {
     setError(null);
     setSuccessMsg(null);
+
+    // Pre-flight check: is google provider enabled?
+    if (!isAuthProviderEnabled("google")) {
+      const errMsg = "Authentication is currently unavailable. Please enable the required sign-in method in Firebase Authentication.";
+      setError(errMsg);
+      logEvent("warning", errMsg);
+      return;
+    }
+
     setLoading(true);
     const provider = new GoogleAuthProvider();
     
@@ -108,9 +126,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       logEvent("success", `Signed in with Google as ${userCredential.user.displayName}`);
       onAuthSuccess(userCredential.user);
     } catch (err: any) {
-      console.error(err);
+      logAuthErrorInDev(err);
       if (err.code !== "auth/popup-closed-by-user") {
-        const errMsg = err.message || "Failed to sign in with Google";
+        const errMsg = getFriendlyAuthErrorMessage(err, "google");
         setError(errMsg);
         logEvent("warning", `Google sign in failed: ${errMsg}`);
       }
